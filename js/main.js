@@ -38,6 +38,20 @@ var Ball = {
 var Util = {
   square: function(x) {
     return x*x;
+  },
+  /**
+   * Compute the symmetric of a unit vector
+   *
+   * x0, y0: Unit vector
+   * x1, y1: Unit vector for the symmetri axis
+   * obj: Object receiving symmetric as fields dx and dy
+   */
+  symmetry: function(x0, y0, x1, y1, random, obj) {
+    var symX = 2 * x1 - x0 + random;
+    var symY = 2 * y1 - y0 + random;
+    var norm = Math.sqrt(Util.square(symX) + Util.square(symY));
+    obj.dx = symX / norm;
+    obj.dy = symY / norm;
   }
 };
 
@@ -63,7 +77,7 @@ var init = function init() {
   ctx.fillStyle = "black";
   ctx.strokeStyle = "blue";
   ctx.arc(midX, midY, radius, 0, Math.PI * 2);
-  ctx.clip();
+//  ctx.clip();
 }
 
 var step = function step() {
@@ -114,11 +128,12 @@ var step = function step() {
   var ballY = midY + Ball.y;
 
 // Clear and display game zone
+  ctx.clearRect(0, 0, width, height);
+
   ctx.beginPath();
   ctx.fillStyle = "black";
   ctx.strokeStyle = "blue";
   ctx.arc(midX, midY, radius, 0, Math.PI * 2);
-  ctx.fill();
   ctx.stroke();
 
 // Display paddle
@@ -126,33 +141,40 @@ var step = function step() {
   var padY = radius * Math.sin(Pad.posRad);
   ctx.beginPath();
   ctx.fillStyle = "white";
+  ctx.strokeStyle = "white";
   ctx.arc(midX + padX, midY + padY, Pad.radius, 0, Math.PI * 2);
   ctx.fill();
   ctx.stroke();
 
 // Display ball
-  console.log("Ball", ballX, ballY);
   ctx.beginPath();
   ctx.arc(ballX, ballY, Ball.radius, 0, Math.PI * 2);
   ctx.fill();
 
+  var axisX, axisY;
 // Check for game over
-  if (Ball.x * Ball.x + Ball.y * Ball.y >= radius * radius) {
-    throw new Error("Game over");
+  var sqBallToCenter = Ball.x * Ball.x + Ball.y * Ball.y;
+  if (sqBallToCenter >= radius * radius) {
+    console.log("Game over!");
+    axisX = Ball.x / sqBallToCenter;
+    axisY = Ball.y / sqBallToCenter;
+    Util.symmetry(Ball.dx, Ball.dy, axisX, axisY, (Math.random() - 0.5) / 2, Ball);
+
+    // Adjusting position immediately
+    Ball.x += Ball.dx * ( Ball.velocity * delta );
+    Ball.y += Ball.dy * ( Ball.velocity * delta );
   }
 
 // Check for bounce
-  var distance = Math.sqrt(Util.square(Ball.x - padX) + Util.square(Ball.y - padY));
-  if (distance <= Pad.radius + Ball.radius) {
-    var axisX = (Ball.x - padX) / distance;
-    var axisY = (Ball.y - padY) / distance;
-    console.log("Axis", axisX, axisY);
-    var bounceX = 2 * axisX - Ball.dx;
-    var bounceY = 2 * axisY - Ball.dy;
-    var bounceNorm = Math.sqrt(Util.square(bounceX) + Util.square(bounceY));
-    console.log("Bouncing", Ball.dx, Ball.dy, " => ", bounceX, bounceY);
-    Ball.dx = bounceX / bounceNorm;
-    Ball.dy = bounceY / bounceNorm;
+  var ballToPad = Math.sqrt(Util.square(Ball.x - padX) + Util.square(Ball.y - padY));
+  if (ballToPad <= Pad.radius + Ball.radius) {
+    axisX = (Ball.x - padX) / ballToPad;
+    axisY = (Ball.y - padY) / ballToPad;
+    Util.symmetry(Ball.dx, Ball.dy, axisX, axisY, (Math.random() - 0.5) / 2, Ball);
+
+    // Adjusting position immediately
+    Ball.x += Ball.dx * ( Ball.velocity * delta );
+    Ball.y += Ball.dy * ( Ball.velocity * delta );
   }
 
   Statistics.fps.end();
