@@ -20,7 +20,9 @@ var Input = {
 var Pad = {
   posRad: Math.PI / 2,
   destRad: Math.PI / 2,
-  radius: 10
+  radius: 10,
+  x: 0,
+  y: 0
 };
 
 /**
@@ -64,132 +66,145 @@ var onmousemove = function onmousemove(event) {
 
 eltCanvas.addEventListener("mousemove", onmousemove);
 
-// Set the clip
-var init = function init() {
-  console.log("Clip init");
-  var width = Config.width;
-  var height = Config.height;
-  var ctx = canvasContext;
-  var radius = Math.min(width, height) / 2;
-  var midX = width / 2;
-  var midY = height / 2;
-  ctx.beginPath();
-  ctx.fillStyle = "black";
-  ctx.strokeStyle = "blue";
-  ctx.arc(midX, midY, radius, 0, Math.PI * 2);
-//  ctx.clip();
-}
 
-var step = function step() {
-  Statistics.fps.begin();
-  Statistics.ms.begin();
+var Game = {
+  // Cached variables
 
-  var now = Date.now();
-  var delta = now - previousFrame;
+  _previousFrameStamp: Date.now(),
 
-  var width = Config.width;
-  var height = Config.height;
-  var ctx = canvasContext;
+  handleMovement: function handleMovement() {
+    var midX = Config.width / 2;
+    var midY = Config.height / 2;
+    var delta = Date.now() - Game._previousFrameStamp;
 
-  var radius = Math.min(width, height) / 2;
-  var midX = width / 2;
-  var midY = height / 2;
-
-// Update the destination and position of the paddle
-  // FIXME: We may not need to update the destination at every frame
-  // FIXME: We may wish to have different speeds for the paddle
-  if (Input.changed) {
-    if (Input.mouseX == midX) {
-      if (Input.mouseY >= midY) {
-        Pad.destRad = Math.PI / 2;
+    // Update the destination and position of the paddle
+    if (Input.changed) {
+      if (Input.mouseX == midX) {
+        if (Input.mouseY >= midY) {
+          Pad.destRad = Math.PI / 2;
+        } else {
+          Pad.destRad = - Math.PI / 2;
+        }
       } else {
-        Pad.destRad = - Math.PI / 2;
+        var div = (Input.mouseY - midY) / (Input.mouseX - midX);
+        if (Input.mouseX >= midX) {
+          Pad.destRad = Math.atan(div);
+        } else {
+          Pad.destRad = Math.PI + Math.atan(div);
+        }
       }
-    } else {
-      var div = (Input.mouseY - midY) / (Input.mouseX - midX);
-      if (Input.mouseX >= midX) {
-        Pad.destRad = Math.atan(div);
-      } else {
-        Pad.destRad = Math.PI + Math.atan(div);
-      }
+      Input.changed = false;
     }
-    Input.changed = false;
-  }
-  if (Pad.destRad > Pad.posRad) {
-    Pad.posRad = Math.min(Pad.destRad, Pad.posRad + 0.02 * delta);
-  } else {
-    Pad.posRad = Math.max(Pad.destRad, Pad.posRad - 0.02 * delta);
-  }
+    if (Pad.destRad > Pad.posRad) {
+      Pad.posRad = Math.min(Pad.destRad, Pad.posRad + 0.02 * delta);
+    } else {
+      Pad.posRad = Math.max(Pad.destRad, Pad.posRad - 0.02 * delta);
+    }
 
-// Update position of the ball
-  Ball.x += Ball.dx * ( Ball.velocity * delta );
-  Ball.y += Ball.dy * ( Ball.velocity * delta );
-  var ballX = midX + Ball.x;
-  var ballY = midY + Ball.y;
-
-// Clear and display game zone
-  ctx.clearRect(0, 0, width, height);
-
-  ctx.beginPath();
-  ctx.fillStyle = "black";
-  ctx.strokeStyle = "blue";
-  ctx.arc(midX, midY, radius, 0, Math.PI * 2);
-  ctx.stroke();
-
-// Display paddle
-  var padX = radius * Math.cos(Pad.posRad);
-  var padY = radius * Math.sin(Pad.posRad);
-  ctx.beginPath();
-  ctx.fillStyle = "white";
-  ctx.strokeStyle = "white";
-  ctx.arc(midX + padX, midY + padY, Pad.radius, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.stroke();
-
-// Display ball
-  ctx.beginPath();
-  ctx.arc(ballX, ballY, Ball.radius, 0, Math.PI * 2);
-  ctx.fill();
-
-  var axisX, axisY;
-// Check for game over
-  var sqBallToCenter = Ball.x * Ball.x + Ball.y * Ball.y;
-  if (sqBallToCenter >= radius * radius) {
-    console.log("Game over!");
-    axisX = Ball.x / sqBallToCenter;
-    axisY = Ball.y / sqBallToCenter;
-    Util.symmetry(Ball.dx, Ball.dy, axisX, axisY, (Math.random() - 0.5) / 2, Ball);
-
-    // Adjusting position immediately
+    // Update position of the ball
     Ball.x += Ball.dx * ( Ball.velocity * delta );
     Ball.y += Ball.dy * ( Ball.velocity * delta );
+  },
+  handleDisplay: function handleDisplay() {
+    var ctx = canvasContext;
+    var width = Config.width;
+    var height = Config.height;
+    var midX = width / 2;
+    var midY = height / 2;
+    var radius = Math.min(midX, midY);
+
+    // Clear and display game zone
+    ctx.clearRect(0, 0, width, height);
+
+// FIXME Optimization: Pre-compute this as an image
+    ctx.beginPath();
+    ctx.fillStyle = "black";
+    ctx.strokeStyle = "blue";
+    ctx.arc(midX, midY, radius, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Display paddle
+    var padX = Pad.x = radius * Math.cos(Pad.posRad);
+    var padY = Pad.y = radius * Math.sin(Pad.posRad);
+    ctx.beginPath();
+    ctx.fillStyle = "white";
+    ctx.strokeStyle = "white";
+// FIXME Optimization: Pre-compute this as an image
+    ctx.arc(midX + padX, midY + padY, Pad.radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Display ball
+// FIXME Optimization: Pre-compute this as an image
+    ctx.beginPath();
+    ctx.arc(midX + Ball.x, midY + Ball.y, Ball.radius, 0, Math.PI * 2);
+    ctx.fill();
+  },
+  handleCollisions: function handleCollisions() {
+    var delta = Date.now() - Game._previousFrameStamp;
+    var radius = Math.min(Config.width, Config.height) / 2;
+    var padX = Pad.x;
+    var padY = Pad.y;
+
+    var axisX, axisY;
+    // Check for game over
+    var sqBallToCenter = Ball.x * Ball.x + Ball.y * Ball.y;
+    if (sqBallToCenter >= radius * radius) {
+      console.log("Game over!");
+      axisX = Ball.x / sqBallToCenter;
+      axisY = Ball.y / sqBallToCenter;
+      Util.symmetry(Ball.dx, Ball.dy, axisX, axisY, (Math.random() - 0.5) / 10, Ball);
+
+      // Adjusting position immediately
+      Ball.x += Ball.dx * ( Ball.velocity * delta );
+      Ball.y += Ball.dy * ( Ball.velocity * delta );
+    }
+
+    // Check for bounce
+    var ballToPad = Math.sqrt(Util.square(Ball.x - padX) + Util.square(Ball.y - padY));
+    if (ballToPad <= Pad.radius + Ball.radius) {
+      console.log("Bouncing", JSON.stringify(Ball));
+      axisX = (Ball.x - padX) / ballToPad;
+      axisY = (Ball.y - padY) / ballToPad;
+      Util.symmetry(Ball.dx, Ball.dy, axisX, axisY, (Math.random() - 0.5) / 2, Ball);
+
+      // Adjusting position immediately
+      Ball.x += Ball.dx * ( Ball.velocity * delta );
+      Ball.y += Ball.dy * ( Ball.velocity * delta );
+      console.log("Bouncing =>", Ball.x, Ball.y, JSON.stringify(Ball));
+    }
+  },
+  step: function step() {
+    Statistics.fps.begin();
+    Statistics.ms.begin();
+
+    var now = Date.now();
+
+    var width = Config.width = Config.width;
+    var height = Config.height = Config.height;
+    Game.radius = Math.min(width, height) / 2;
+    Game.midX = width / 2;
+    Game.midY = height / 2;
+
+    Game.handleMovement();
+    Game.handleDisplay();
+    Game.handleCollisions();
+
+    Statistics.fps.end();
+    Statistics.ms.end();
+
+    Game._previousFrameStamp = now;
+    requestAnimationFrame(step);
   }
-
-// Check for bounce
-  var ballToPad = Math.sqrt(Util.square(Ball.x - padX) + Util.square(Ball.y - padY));
-  if (ballToPad <= Pad.radius + Ball.radius) {
-    axisX = (Ball.x - padX) / ballToPad;
-    axisY = (Ball.y - padY) / ballToPad;
-    Util.symmetry(Ball.dx, Ball.dy, axisX, axisY, (Math.random() - 0.5) / 2, Ball);
-
-    // Adjusting position immediately
-    Ball.x += Ball.dx * ( Ball.velocity * delta );
-    Ball.y += Ball.dy * ( Ball.velocity * delta );
-  }
-
-  Statistics.fps.end();
-  Statistics.ms.end();
-
-  previousFrame = now;
-  requestAnimationFrame(step);
+};
+var step = function() {
+  Game.step();
 };
 
 
 // Configure
 var Config = window.Circular.Config;
 Config.init(eltCanvas);
-Config.addEventListener("change", init);
-init();
 
 var Statistics = window.Circular.Statistics;
 
@@ -199,7 +214,7 @@ var requestAnimationFrame =
 || window.webkitRequestAnimationFrame
 || window.ieRequestAnimationFrame;
 
-previousFrame = Date.now();
+Game._previousFrameStamp = Date.now();
 
 // Launch
 requestAnimationFrame(step);
