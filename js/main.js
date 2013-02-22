@@ -18,8 +18,8 @@ var Input = {
  * The player-controlled pad
  */
 var Pad = {
-  posRad: 0,
-  destRad: 0,
+  posRad: Math.PI / 2,
+  destRad: Math.PI / 2,
   radius: 10
 };
 
@@ -30,8 +30,9 @@ var Ball = {
   x: 0,
   y: 0,
   radius: 5,
-  velocityX: 0.1,
-  velocityY: 0.1
+  velocity: 0.1,
+  dx: 0,
+  dy: 1
 };
 
 var Util = {
@@ -45,7 +46,6 @@ var onmousemove = function onmousemove(event) {
   Input.mouseX = event.clientX;
   Input.mouseY = event.clientY;
   Input.changed = true;
-  console.log("Mouse move", event.clientX, event.clientY);
 };
 
 eltCanvas.addEventListener("mousemove", onmousemove);
@@ -108,8 +108,8 @@ var step = function step() {
   }
 
 // Update position of the ball
-  Ball.x += Ball.velocityX * delta;
-  Ball.y += Ball.velocityY * delta;
+  Ball.x += Ball.dx * ( Ball.velocity * delta );
+  Ball.y += Ball.dy * ( Ball.velocity * delta );
   var ballX = midX + Ball.x;
   var ballY = midY + Ball.y;
 
@@ -131,6 +131,7 @@ var step = function step() {
   ctx.stroke();
 
 // Display ball
+  console.log("Ball", ballX, ballY);
   ctx.beginPath();
   ctx.arc(ballX, ballY, Ball.radius, 0, Math.PI * 2);
   ctx.fill();
@@ -141,8 +142,17 @@ var step = function step() {
   }
 
 // Check for bounce
-  if (Math.sqrt(Util.square(Ball.x - padX) + Util.square(Ball.y - padY)) <= Pad.radius + Ball.radius) {
-    console.log("Bounce!");
+  var distance = Math.sqrt(Util.square(Ball.x - padX) + Util.square(Ball.y - padY));
+  if (distance <= Pad.radius + Ball.radius) {
+    var axisX = (Ball.x - padX) / distance;
+    var axisY = (Ball.y - padY) / distance;
+    console.log("Axis", axisX, axisY);
+    var bounceX = 2 * axisX - Ball.dx;
+    var bounceY = 2 * axisY - Ball.dy;
+    var bounceNorm = Math.sqrt(Util.square(bounceX) + Util.square(bounceY));
+    console.log("Bouncing", Ball.dx, Ball.dy, " => ", bounceX, bounceY);
+    Ball.dx = bounceX / bounceNorm;
+    Ball.dy = bounceY / bounceNorm;
   }
 
   Statistics.fps.end();
