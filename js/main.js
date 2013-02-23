@@ -14,46 +14,83 @@ var Input = {
   changed: false
 };
 
+var Sprite = function Sprite() {
+  /**
+   * The coordinates of the center of this object
+   */
+  this.center = new Int16Array(2);
+};
+
+/**
+ * @constructor
+ */
+var Obstacle = function Obstacle() {
+  Sprite.call(this);
+};
+Obstacle.prototype = Object.create(Sprite.prototype);
+
+// Must be implemented by descendant class
+Obstacle.prototype.contact = null;
+
+/**
+ * Bounce if necessary.
+ *
+ * @return {boolean} `true` If bounced, `false` otherwise.
+ */
+Obstacle.prototype.bounce = function bounce(ball, inner) {
+//  if (!this.contact(ball)) {
+//    return false;
+//  }
+  var axisX = ball.center[0] - this.center[0];
+  var axisY = ball.center[1] - this.center[1];
+  if (inner) {
+    axisX = - axisX;
+    axisY = - axisY;
+  }
+  // FIXME: Norm can be shared with `contact`
+  var norm = Math.sqrt(axisX * axisX + axisY * axisY);
+  axisX /= norm;
+  axisY /= norm;
+  var symX = 2 * axisX - ball.speed[0];
+  var symY = 2 * axisY - ball.speed[1];
+  console.log("Bounce", "axisX", axisX, "axisY", axisY,
+              "speedX", ball.speed[0],
+              "speedY", ball.speed[1],
+              "symX", symX, "symY", symY);
+// [15:40:33.827] Bounce axisX 0 axisY -1 speedX 0 speedY 1 symX 0 symY -3
+  norm = Math.sqrt(Util.square(symX) + Util.square(symY));
+  ball.speed[0] = symX / norm;
+  ball.speed[1] = symY / norm;
+  console.log("=>", "norm", norm,
+    "new speedX", symX / norm, ball.speed[0],
+    "new speedY", symY / norm, ball.speed[1]);
+  return true;
+};
+
+
 /**
  * The player-controlled pad
  */
-var Pad = {
-  posRad: Math.PI / 2,
-  destRad: Math.PI / 2,
-  radius: 10,
-  x: 0,
-  y: 0
-};
+var Pad = new Obstacle();
+Pad.posRad = Math.PI / 2;// Position in radians
+Pad.destRad = Math.PI / 2; // Destination in radians
+Pad.radius = 10;
 
 /**
  * The ball
  */
-var Ball = {
-  x: 0,
-  y: 0,
-  radius: 5,
-  velocity: 0.1,
-  dx: 0,
-  dy: 1
-};
+var Ball = new Obstacle();
+Ball.radius = 5;
+Ball.velocity = 0.1;
+Ball.speed = new Float32Array(2);
+Ball.speed[1] = 1;
+Ball.destOffset = new Uint32Array(2);
+
+var Field = new Obstacle();
 
 var Util = {
   square: function(x) {
     return x*x;
-  },
-  /**
-   * Compute the symmetric of a unit vector
-   *
-   * x0, y0: Unit vector
-   * x1, y1: Unit vector for the symmetri axis
-   * obj: Object receiving symmetric as fields dx and dy
-   */
-  symmetry: function(x0, y0, x1, y1, random, obj) {
-    var symX = 2 * x1 - x0 + random;
-    var symY = 2 * y1 - y0 + random;
-    var norm = Math.sqrt(Util.square(symX) + Util.square(symY));
-    obj.dx = symX / norm;
-    obj.dy = symY / norm;
   }
 };
 
@@ -102,8 +139,8 @@ var Game = {
     }
 
     // Update position of the ball
-    Ball.x += Ball.dx * ( Ball.velocity * delta );
-    Ball.y += Ball.dy * ( Ball.velocity * delta );
+    Ball.center[0] += Ball.speed[0] * ( Ball.velocity * delta );
+    Ball.center[1] += Ball.speed[1] * ( Ball.velocity * delta );
   },
   handleDisplay: function handleDisplay() {
     var ctx = canvasContext;
@@ -124,8 +161,8 @@ var Game = {
     ctx.stroke();
 
     // Display paddle
-    var padX = Pad.x = radius * Math.cos(Pad.posRad);
-    var padY = Pad.y = radius * Math.sin(Pad.posRad);
+    var padX = Pad.center[0] = radius * Math.cos(Pad.posRad);
+    var padY = Pad.center[1] = radius * Math.sin(Pad.posRad);
     ctx.beginPath();
     ctx.fillStyle = "white";
     ctx.strokeStyle = "white";
@@ -137,41 +174,48 @@ var Game = {
     // Display ball
 // FIXME Optimization: Pre-compute this as an image
     ctx.beginPath();
-    ctx.arc(midX + Ball.x, midY + Ball.y, Ball.radius, 0, Math.PI * 2);
+    ctx.arc(midX + Ball.center[0], midY + Ball.center[1], Ball.radius, 0, Math.PI * 2);
     ctx.fill();
   },
   handleCollisions: function handleCollisions() {
     var delta = Date.now() - Game._previousFrameStamp;
     var radius = Math.min(Config.width, Config.height) / 2;
-    var padX = Pad.x;
-    var padY = Pad.y;
+    var padX = Pad.center[0];
+    var padY = Pad.center[1];
 
     var axisX, axisY;
-    // Check for game over
-    var sqBallToCenter = Ball.x * Ball.x + Ball.y * Ball.y;
-    if (sqBallToCenter >= radius * radius) {
-      console.log("Game over!");
-      axisX = Ball.x / sqBallToCenter;
-      axisY = Ball.y / sqBallToCenter;
-      Util.symmetry(Ball.dx, Ball.dy, axisX, axisY, (Math.random() - 0.5) / 10, Ball);
 
+    // Check whether we have hit the border
+    var sqBallToCenter = Ball.center[0] * Ball.center[0] + Ball.center[1] * Ball.center[1];
+    if (sqBallToCenter >= radius * radius) {
+      console.log("Hit on the border!");
+      Field.bounce(Ball, true);
+      /*
+      axisX = Ball.center[0] / sqBallToCenter;
+      axisY = Ball.center[1] / sqBallToCenter;
+      Util.symmetry(Ball.speed[0], Ball.speed[1], axisX, axisY, 0, Ball);
+*/
       // Adjusting position immediately
-      Ball.x += Ball.dx * ( Ball.velocity * delta );
-      Ball.y += Ball.dy * ( Ball.velocity * delta );
+      Ball.center[0] += Ball.speed[0] * ( Ball.velocity * delta );
+      Ball.center[1] += Ball.speed[1] * ( Ball.velocity * delta );
     }
 
     // Check for bounce
-    var ballToPad = Math.sqrt(Util.square(Ball.x - padX) + Util.square(Ball.y - padY));
+    var ballToPad = Math.sqrt(Util.square(Ball.center[0] - padX) + Util.square(Ball.center[1] - padY));
     if (ballToPad <= Pad.radius + Ball.radius) {
       console.log("Bouncing", JSON.stringify(Ball));
-      axisX = (Ball.x - padX) / ballToPad;
-      axisY = (Ball.y - padY) / ballToPad;
-      Util.symmetry(Ball.dx, Ball.dy, axisX, axisY, (Math.random() - 0.5) / 2, Ball);
 
+      Pad.bounce(Ball, false);
+      /*
+      axisX = (Ball.center[0] - padX) / ballToPad;
+      axisY = (Ball.center[1] - padY) / ballToPad;
+      Util.symmetry(Ball.speed[0], Ball.speed[1], axisX, axisY, (Math.random() - 0.5) / 2, Ball);
+*/
       // Adjusting position immediately
-      Ball.x += Ball.dx * ( Ball.velocity * delta );
-      Ball.y += Ball.dy * ( Ball.velocity * delta );
-      console.log("Bouncing =>", Ball.x, Ball.y, JSON.stringify(Ball));
+      Ball.center[0] += Ball.speed[0] * ( Ball.velocity * delta );
+      Ball.center[1] += Ball.speed[1] * ( Ball.velocity * delta );
+      console.log("Bouncing =>", Ball.center[0], Ball.center[1], JSON.stringify(Ball));
+//      throw new Error();
     }
   },
   step: function step() {
@@ -198,6 +242,9 @@ var Game = {
   }
 };
 var step = function() {
+  if (window.stopGame) { // FIXME: For debugging purposes
+    throw new Error();
+  }
   Game.step();
 };
 
