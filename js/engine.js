@@ -202,7 +202,7 @@ Engine.prototype = {
     ////// Handle movements
 
     // FIXME: Minimize pad movements
-    if (pad.destRad > pad.posRad) {
+    if (pad.destRad - pad.posRad < pad.posRad - pad.destRad) {
       pad.posRad = Math.min(pad.destRad, pad.posRad + 0.02 * delta);
     } else {
       pad.posRad = Math.max(pad.destRad, pad.posRad - 0.02 * delta);
