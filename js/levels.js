@@ -83,7 +83,7 @@ levels.push({
 
     var ball = engine.addBall();
     ball.x = 0;
-    ball.y = 15;
+    ball.y = 20;
     ball.dx = 0;
     ball.dy = 1;
 
