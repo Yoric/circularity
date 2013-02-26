@@ -176,6 +176,8 @@ Engine.prototype = {
 
     var midX = Config.width / 2;
     var midY = Config.height / 2;
+    var radius = Math.min(Config.width, Config.height) / 2;
+
     var delta = now - this._previousFrameStamp;
 
     var pad = this._pad;
@@ -202,10 +204,12 @@ Engine.prototype = {
     ////// Handle movements
 
     if (pad.destRad - pad.posRad < pad.posRad - pad.destRad) {
-      pad.posRad = Math.min(pad.destRad, pad.posRad + 0.02 * delta);
+      pad.posRad = Math.min(pad.destRad, pad.posRad + 0.01 * delta);
     } else {
-      pad.posRad = Math.max(pad.destRad, pad.posRad - 0.02 * delta);
+      pad.posRad = Math.max(pad.destRad, pad.posRad - 0.01 * delta);
     }
+    pad.x = radius * Math.cos(this._pad.posRad);
+    pad.y = radius * Math.sin(this._pad.posRad);
 
     for (var i = 0; i < this._balls.length; ++i) {
       var ball = this._balls[i];
@@ -220,7 +224,6 @@ Engine.prototype = {
 
     ctx.save();
     ctx.translate(midX, midY);
-    var radius = Math.min(Config.width, Config.height) / 2;
 
     // Display center
     for (i = 0; i < this._areas.length; ++i) {
@@ -231,15 +234,7 @@ Engine.prototype = {
     this._border.show(ctx);
 
     // Display paddle
-    var padX = this._pad.x = radius * Math.cos(this._pad.posRad);
-    var padY = this._pad.y = radius * Math.sin(this._pad.posRad);
-    ctx.beginPath();
-    ctx.fillStyle = "white";
-    ctx.strokeStyle = "white";
-// FIXME Optimization: Pre-compute this as an image
-    ctx.arc( padX, padY, this._pad.radiusPixels, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
+    this._pad.show(ctx);
 
     // Display ball
     for (i = 0; i < this._balls.length; ++i) {
@@ -249,18 +244,24 @@ Engine.prototype = {
     ////// Handle collisions
     var destructions = false;
     for (i = 0; i < this._balls.length; ++i) {
+      var collisions = 0;
       ball = this._balls[i];
       // FIXME: Collision with the pad
-      this._pad.handleCollision(ball);
-      this._border.handleCollision(ball);
+      if (this._pad.handleCollision(ball)) collisions++;
+      if (this._border.handleCollision(ball)) collisions++;
       for (var j = 0; j < this._areas.length; ++j) {
         var area = this._areas[j];
-        area.handleCollision(ball);
+        if (area.handleCollision(ball)) collisions++;
         if (area.isDestroyed) {
           destructions = true;
         }
       }
       // FIXME: Collision with other balls
+
+      // Increase speed progressively
+      if (collisions > 0) {
+        ball.velocity *= (1 + collisions / 20);
+      }
     }
 
     // FIXME: This won't scale if we have too many areas
@@ -323,6 +324,9 @@ Sprite.prototype = {
   },
 
   show: function show(ctx) {
+    if (this.name == "pad") {
+      console.log("Showing pad", this.x, this.y, this.radiusPixels);
+    }
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.radiusPixels, 0, Math.PI * 2);
     if (this.fillStyle) {
@@ -420,6 +424,7 @@ var Pad = function Pad() {
   this.destRad = Math.PI / 2; // Destination in radians
   this.radiusPixels = 20;
   this.isBouncing = true;
+  this.fillStyle = "white";
 };
 Pad.prototype = {
   __proto__: Object.create(Sprite.prototype),
