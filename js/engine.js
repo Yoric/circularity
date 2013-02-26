@@ -244,6 +244,7 @@ Engine.prototype = {
 
     ////// Handle collisions
     var destructions = false;
+    var adjustHealth = false;
     for (i = 0; i < this._balls.length; ++i) {
       var collisions = 0;
       ball = this._balls[i];
@@ -251,12 +252,7 @@ Engine.prototype = {
       if (this._border.handleCollision(ball)) {
         ball.velocity = ball.velocity * 0.9;
         this._health -= 10;
-        console.log("Health reduced to", this._health, Math.floor(this._health * 255 / 100));
-        this._border.strokeStyle = "rgb(0, 0, " + Math.floor(this._health * 255 / 100) + ")";
-        this._border.lineWidth = Math.ceil(this._health / 10);
-        if (this._health <= 0) {
-          this.levelComplete(false);
-        }
+        adjustHealth = true;
       }
       for (var j = 0; j < this._areas.length; ++j) {
         var area = this._areas[j];
@@ -269,9 +265,20 @@ Engine.prototype = {
 
       // Increase speed progressively
       if (collisions > 0) {
-        ball.velocity *= (1 + collisions / 20);
+        ball.velocity += 0.001;
+        this._health = Math.min(100, this._health + 1);
+        adjustHealth = true;
       }
     }
+    if (adjustHealth) {
+      console.log("Health changed to", this._health, Math.floor(this._health * 255 / 100));
+      this._border.strokeStyle = "rgb(0, 0, " + Math.floor(this._health * 255 / 100) + ")";
+      this._border.lineWidth = Math.ceil(this._health / 10);
+      if (this._health <= 0) {
+        this.levelComplete(false);
+      }
+    }
+
 
     // FIXME: This won't scale if we have too many areas
     if (destructions) {
