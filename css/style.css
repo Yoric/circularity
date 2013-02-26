@@ -3,3 +3,22 @@ body {
     padding: 0;
     margin: 0;
 }
+#background {
+    color: white;
+    text-align: center;
+    font-family: "fantasy";
+    font-weight: bold;
+    top: 50%;
+}
+.background {
+}
+
+.mayappear {
+    transition: opacity .3s;
+}
+.hidden {
+    opacity: 0;
+}
+.shown {
+    opacity: 1;
+}

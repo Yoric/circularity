@@ -13,15 +13,16 @@ var Config = {
       var width = Math.round(backgroundRect.width);
       var height = Math.round(backgroundRect.height);
       var diagonal =  Math.sqrt(width * width, height * height);
-      console.log("Adjusting size", "width", width, "height", height, "diagonal", diagonal);
       eltCanvas.setAttribute("width", width);
       eltCanvas.setAttribute("height", height);
       adjustSizeInProgress = null;
       Config.width = width;
       Config.height = height;
       Config.diagonal = diagonal;
-      for (var listener of listeners) {
-        listener();
+      if (listeners) {
+        for (var listener of listeners) {
+          listener();
+        }
       }
     };
     var adjustSize = function adjustSize() {
@@ -35,6 +36,7 @@ var Config = {
   },
   addEventListener: function addEventListener(kind, listener) {
     listeners.add(listener);
+    listener();
   },
   removeEventListener: function removeEventListener(kind, listener) {
     listeners.remove(listener);

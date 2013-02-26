@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Circulatorious</title>
+  <title>Circularity</title>
    <meta charset="utf-8" />
    <script defer="defer" src="lib/stats.js/src/Stats.js" ></script>
    <script defer="defer" src="js/stats.js" ></script>
    <script defer="defer" src="js/config.js" ></script>
+   <script defer="defer" src="js/levels.js" ></script>
+   <script defer="defer" src="js/engine.js" ></script>
    <script defer="defer" src="js/main.js" ></script>
    <link rel="stylesheet" href="css/style.css" />
 <meta name="viewport" 
@@ -13,6 +15,8 @@
 </head>
 
 <body style="overflow:hidden">
+<div id="background" class="background" style="position:absolute;width:100%;height:100%">
+</div>
 <canvas id="canvas" style="position:absolute;width:100%;height:100%">
 </canvas>
 </body>
