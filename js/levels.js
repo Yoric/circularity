@@ -29,6 +29,9 @@ levels.push({
   },
   step: function step(engine) {
     // Nothing to do
+  },
+  toString: function toString() {
+    return "Starting credits";
   }
 });
 
@@ -44,7 +47,7 @@ levels.push({
 
     var ball = engine.addBall();
     ball.x = 0;
-    ball.y = 10;
+    ball.y = 15;
     ball.dx = 0;
     ball.dy = 1;
 
@@ -67,16 +70,22 @@ levels.push({
   },
   step: function step(engine) {
     engine.step();
+  },
+  toString: function toString() {
+    return "Tutorial";
   }
 });
 
 // Ending credits
 levels.push({
   start: function start(engine) {
-    engine.showText("You have escaped the circularity");
+    engine.showText("Congratulations. You have escaped the circularity");
   },
   step: function step(engine) {
     // Do NOT call engine.step()
+  },
+  toString: function toString() {
+    return "Ending credits";
   }
 });
 

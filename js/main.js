@@ -13,10 +13,16 @@ var run = function run() {
     console.log("Loop", "level", i, "from", levels.length, new Error().stack);
     eltBackground.innerHTML = "";
     var level = levels[i++];
+    console.log("Next level is", "" + level);
     var engine = new Circular.Engine();
     engine.addEventListener("levelComplete", loop);
-    level.start(engine);
-    engine.run(level);
+    try {
+      level.start(engine);
+      engine.run(level);
+    } catch (ex) {
+      console.error("Error loading level", i, levels.length, ex.stack);
+      throw ex;
+    }
   };
   window.setTimeout(loop, 0);
 };

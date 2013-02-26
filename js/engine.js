@@ -8,6 +8,11 @@ var requestAnimationFrame =
 || window.webkitRequestAnimationFrame
 || window.ieRequestAnimationFrame;
 
+// Utility function
+var square = function square(x) {
+  return x * x;
+};
+
 /**
  * @constructor
  */
@@ -36,6 +41,9 @@ Engine.prototype = {
    * @param {boolean} victory If true, the player won, otherwise, the player lost
    */
   levelComplete: function levelComplete(victory) {
+    if (this._complete) {
+      return;
+    }
     this._step = function() { }; // Level is complete, nothing left to do
     this._complete = true;
     this._fireEvent(":levelComplete", {kind: "levelComplete", victory: victory});
@@ -314,10 +322,10 @@ Sprite.prototype = {
     var sqBounceDistance;
     var bounce;
     if (this.isAround) {
-      sqBounceDistance = Util.square(this.radiusPixels - ball.radiusPixels);
+      sqBounceDistance = square(this.radiusPixels - ball.radiusPixels);
       bounce = sqBounceDistance <= sqActualDistance;
     } else {
-      sqBounceDistance = Util.square(this.radiusPixels + ball.radiusPixels);
+      sqBounceDistance = square(this.radiusPixels + ball.radiusPixels);
       bounce = sqBounceDistance >= sqActualDistance;
       axisX = - axisX;
       axisY = - axisY;
@@ -415,7 +423,7 @@ var onmousemove = function onmousemove(event) {
 };
 
 eltCanvas.addEventListener("mousemove", onmousemove);
-
+document.getElementById("background").addEventListener("mousemove", onmousemove);
 
 // Configure
 var Circular;
