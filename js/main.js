@@ -25,7 +25,7 @@ var run = function run() {
         loop();
       } else {
         try {
-          engine.showText("The circularity is too strong, you cannot escape");
+          engine.showText("The pull of the circularity is too strong. There is no escape.");
         } catch (ex) {
           console.error("Error", ex.stack);
           throw ex;

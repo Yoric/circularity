@@ -35,7 +35,7 @@ var addObstacle = function addObstacle(engine, x, y) {
   obstacle.y = y;
   obstacle.radiusPixels = 5;
   obstacle.isBouncing = true;
-  obstacle.strokeStyle = "white";
+  obstacle.fillStyle = "white";
   return obstacle;
 };
 
@@ -53,7 +53,7 @@ var addDestructible = function addDestructible(engine, x, y) {
 // Starting credits
 levels.push({
   start: function start(engine) {
-    var eltText = engine.showText("The circularity has pulled you in.");
+    var eltText = engine.showText("The circularity has pulled you in. Escape.");
     engine.addEventListener("textShown", function onshown() {
       engine.removeEventListener("textShown", onshown);
       engine.addEventListener("textHidden", function onhidden() {
@@ -75,7 +75,7 @@ levels.push({
 
 levels.push({
   start: function start(engine) {
-    engine.showText("To exit, bounce the particle towards the center.");
+    engine.showText("To escape this circle, bounce the particle towards the center.");
     engine.addEventListener("textShown", function onshown() {
       engine.removeEventListener("textShown", onshown);
       window.setTimeout(function () { engine.hideText(); }, 5000);
@@ -101,7 +101,7 @@ levels.push({
 // Level 2: Obstacle course
 levels.push({
   start: function start(engine, img) {
-    engine.showText("Work around the particles.");
+    engine.showText("Obstacles block your escape. Find your way around them.");
     engine.addEventListener("textShown", function onshown() {
       engine.removeEventListener("textShown", onshown);
       window.setTimeout(function () { engine.hideText(); }, 5000);
@@ -135,7 +135,7 @@ levels.push({
 levels.push({
   obstacles: [],
   start: function start(engine) {
-    engine.showText("They move, too");
+    engine.showText("Some of these particles move.");
     engine.addEventListener("textShown", function onshown() {
       engine.removeEventListener("textShown", onshown);
       window.setTimeout(function () { engine.hideText(); }, 5000);
@@ -185,7 +185,7 @@ levels.push({
 // Level 4: Bricks
 levels.push({
   start: function start(engine, img) {
-    engine.showText("Clear a path");
+    engine.showText("There is no path. Maybe you can clear one.");
     engine.addEventListener("textShown", function onshown() {
       engine.removeEventListener("textShown", onshown);
       window.setTimeout(function () { engine.hideText(); }, 5000);

@@ -145,6 +145,22 @@ Engine.prototype = {
   run: function run(level) {
     var self = this;
     this._step = function() {
+      if (Input.paused) {
+        console.log("Paused", new Error().stack);
+        var onunpause = function onunpause(event) {
+          console.log("Unpaused");
+          window.removeEventListener("click", onunpause);
+          Input.paused = false;
+          window.setTimeout(function() {
+            self._previousFrameStamp = Date.now();
+            console.log("requestAnimationFrame", 3);
+            requestAnimationFrame(self._step);
+          }, 100);
+        };
+        window.addEventListener("click", onunpause);
+        return;
+      }
+
       Statistics.fps.begin();
       level.step(self);
       Statistics.fps.end();
@@ -168,11 +184,29 @@ Engine.prototype = {
     };
     Config.addEventListener("screenChanged", config);
     this._previousFrameStamp = Date.now();
+    console.log("requestAnimationFrame", 2);
     requestAnimationFrame(this._step);
   },
 
   // One step of the game (should be called by the level)
   step: function() {
+      if (Input.paused) {
+        console.log("Paused", new Error().stack);
+        var onunpause = function onunpause(event) {
+          console.log("Unpaused");
+          window.removeEventListener("click", onunpause);
+          Input.paused = false;
+          window.setTimeout(function() {
+            self._previousFrameStamp = Date.now();
+            console.log("requestAnimationFrame", 3);
+            requestAnimationFrame(self._step);
+          }, 100);
+        };
+        window.addEventListener("click", onunpause);
+        return;
+      }
+
+
     var now = Date.now();
 
     var midX = Config.width / 2;
@@ -340,6 +374,9 @@ Sprite.prototype = {
     this.radiusPixels = Math.floor(globalRadius * this.radiusPercent);
   },
 
+  /**
+   * Display a sprite
+   */
   show: function show(ctx) {
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.radiusPixels, 0, Math.PI * 2);
@@ -479,7 +516,8 @@ var canvasContext = eltCanvas.getContext("2d");
 var Input = {
   mouseX: 0,
   mouseY: 0,
-  changed: false
+  changed: false,
+  paused: false
 };
 
 var onmousemove = function onmousemove(event) {
@@ -491,6 +529,16 @@ var onmousemove = function onmousemove(event) {
 
 eltCanvas.addEventListener("mousemove", onmousemove);
 document.getElementById("background").addEventListener("mousemove", onmousemove);
+
+var onblur = function onblur(event) {
+  console.log("blur");
+  Input.paused = true;
+  event.stopPropagation();
+};
+
+window.addEventListener("blur", onblur);
+document.addEventListener("blur", onblur);
+eltCanvas.addEventListener("blur", onblur);
 
 // Configure
 var Circular;
