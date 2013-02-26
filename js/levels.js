@@ -12,12 +12,48 @@ if ("Circular" in window) {
 }
 var levels = Circular.levels = [];
 
+var addTarget = function addTarget(engine) {
+  var target = engine.addArea();
+  target.x = 0;
+  target.y = 0;
+  target.radiusPixels = 10;
+  target.strokeStyle = "green";
 
+  var superHandleCollision = target.handleCollision;
+  target.handleCollision = function handleCollision(ball) {
+    if (superHandleCollision.call(this, ball)) {
+      console.log("Level is complete");
+      engine.levelComplete(true);
+    }
+  };
+  return target;
+};
+
+var addObstacle = function addObstacle(engine, x, y) {
+  var obstacle = engine.addArea();
+  obstacle.x = x;
+  obstacle.y = y;
+  obstacle.radiusPixels = 5;
+  obstacle.isBouncing = true;
+  obstacle.strokeStyle = "white";
+  return obstacle;
+};
+
+var addDestructible = function addDestructible(engine, x, y) {
+  var obstacle = engine.addArea();
+  obstacle.x = x;
+  obstacle.y = y;
+  obstacle.radiusPixels = 5;
+  obstacle.isBouncing = true;
+  obstacle.strokeStyle = "white";
+  obstacle.isDestructible = true;
+  return obstacle;
+};
 
 // Starting credits
 levels.push({
   start: function start(engine) {
-    var eltText = engine.showText("You have been trapped in the circularity");
+    var eltText = engine.showText("The circularity has pulled you in.");
     engine.addEventListener("textShown", function onshown() {
       engine.removeEventListener("textShown", onshown);
       engine.addEventListener("textHidden", function onhidden() {
@@ -39,7 +75,7 @@ levels.push({
 
 levels.push({
   start: function start(engine) {
-    engine.showText("To exit, bounce the particle towards the center");
+    engine.showText("To exit, bounce the particle towards the center.");
     engine.addEventListener("textShown", function onshown() {
       engine.removeEventListener("textShown", onshown);
       window.setTimeout(function () { engine.hideText(); }, 5000);
@@ -51,20 +87,7 @@ levels.push({
     ball.dx = 0;
     ball.dy = 1;
 
-    var target = engine.addArea();
-    target.x = 0;
-    target.y = 0;
-    target.radiusPixels = 10;
-    target.strokeStyle = "green";
-
-    var superHandleCollision = target.handleCollision;
-    target.handleCollision = function handleCollision(ball) {
-      if (superHandleCollision.call(this, ball)) {
-        console.log("Level is complete");
-        engine.levelComplete(true);
-      }
-    };
-
+    var target = addTarget(engine);
     engine.run(this);
   },
   step: function step(engine) {
@@ -78,7 +101,7 @@ levels.push({
 // Level 2: Obstacle course
 levels.push({
   start: function start(engine, img) {
-    engine.showText("Often, you will need to avoid obstacles");
+    engine.showText("Work around the particles.");
     engine.addEventListener("textShown", function onshown() {
       engine.removeEventListener("textShown", onshown);
       window.setTimeout(function () { engine.hideText(); }, 5000);
@@ -90,30 +113,12 @@ levels.push({
     ball.dx = 0;
     ball.dy = 1;
 
-    var target = engine.addArea();
-    target.x = 0;
-    target.y = 0;
-    target.radiusPixels = 10;
-    target.strokeStyle = "green";
-
-    var superHandleCollision = target.handleCollision;
-    target.handleCollision = function handleCollision(ball) {
-      if (superHandleCollision.call(this, ball)) {
-        console.log("Level is complete");
-        engine.levelComplete(true);
-      }
-    };
-
+    var target = addTarget(engine);
 
     var obstacles = [[0, 25], [0, -25], [25, 0], [-25, 0]];
     for (var i = 0; i < obstacles.length; ++i) {
-      var obstacle = engine.addArea();
       var coor = obstacles[i];
-      obstacle.x = coor[0];
-      obstacle.y = coor[1];
-      obstacle.radiusPixels = 5;
-      obstacle.isBouncing = true;
-      obstacle.strokeStyle = "white";
+      var obstacle = addObstacle(engine, coor[0], coor[1]);
     }
 
     engine.run(this);
@@ -142,11 +147,7 @@ levels.push({
     ball.dx = 0;
     ball.dy = 1;
 
-    var target = engine.addArea();
-    target.x = 0;
-    target.y = 0;
-    target.radiusPixels = 10;
-    target.strokeStyle = "green";
+    var target = addTarget(engine);
 
     var superHandleCollision = target.handleCollision;
     target.handleCollision = function handleCollision(ball) {
@@ -158,13 +159,9 @@ levels.push({
 
     var obstacles = [0, Math.PI/2, Math.PI, 3*Math.PI/2];
     for (var i = 0; i < obstacles.length; ++i) {
-      var obstacle = engine.addArea();
       var angle = obstacles[i];
-      obstacle.x = Math.cos(angle) * 25;
-      obstacle.y = Math.sin(angle) * 25;
-      obstacle.radiusPixels = 5;
-      obstacle.isBouncing = true;
-      obstacle.strokeStyle = "white";
+      var obstacle = addObstacle(engine,
+        Math.cos(angle) * 25, Math.sin(angle) * 25);
       this.obstacles.push(obstacle);
     }
 
@@ -200,55 +197,31 @@ levels.push({
     ball.dx = .1;
     ball.dy = .9;
 
-    var target = engine.addArea();
-    target.x = 0;
-    target.y = 0;
-    target.radiusPixels = 10;
-    target.strokeStyle = "green";
-
-    var superHandleCollision = target.handleCollision;
-    target.handleCollision = function handleCollision(ball) {
-      if (superHandleCollision.call(this, ball)) {
-        console.log("Level is complete");
-        engine.levelComplete(true);
-      }
-    };
+    var target = addTarget(engine);
 
     var obstacle;
     var angle;
     var i;
 
     for (i = 0; i < 4; ++i) {
-      obstacle = engine.addArea();
       angle = Math.PI * i / 2;
-      obstacle.x = Math.cos(angle) * 10;
-      obstacle.y = Math.sin(angle) * 10;
-      obstacle.radiusPixels = 5;
-      obstacle.isBouncing = true;
-      obstacle.strokeStyle = "white";
-      obstacle.isDestructible = true;
+      obstacle = addDestructible(engine,
+        Math.cos(angle) * 10,
+        Math.sin(angle) * 10);
     }
 
     for (i = 0; i < 8; ++i) {
-      obstacle = engine.addArea();
       angle = Math.PI * i / 4;
-      obstacle.x = Math.cos(angle) * 25;
-      obstacle.y = Math.sin(angle) * 25;
-      obstacle.radiusPixels = 5;
-      obstacle.isBouncing = true;
-      obstacle.strokeStyle = "white";
-      obstacle.isDestructible = true;
+      obstacle = addDestructible(engine,
+        Math.cos(angle) * 25,
+        Math.sin(angle) * 25);
     }
 
     for (i = 0; i < 16; ++i) {
-      obstacle = engine.addArea();
       angle = Math.PI * i / 8;
-      obstacle.x = Math.cos(angle) * 40;
-      obstacle.y = Math.sin(angle) * 40;
-      obstacle.radiusPixels = 5;
-      obstacle.isBouncing = true;
-      obstacle.strokeStyle = "white";
-      obstacle.isDestructible = true;
+      obstacle = addDestructible(engine,
+        Math.cos(angle) * 40,
+        Math.sin(angle) * 40);
     }
 
     engine.run(this);
