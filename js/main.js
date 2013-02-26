@@ -6,9 +6,11 @@ var Circular = window.Circular;
 
 var levels = Circular.levels;
 
+var startLevel = 0;
+
 var run = function run() {
   var eltBackground = document.getElementById("background");
-  var i = 0;
+  var i = startLevel;
   var loop = function loop() {
     console.log("Loop", "level", i, "from", levels.length, new Error().stack);
     eltBackground.innerHTML = "";
@@ -26,6 +28,27 @@ var run = function run() {
   };
   window.setTimeout(loop, 0);
 };
+
+// Debugging code
+if (window.location.search.length > 1) {
+  (function() {
+    var args = window.location.search.substr(1).split("&");
+    var i;
+    for (i = 0; i < args.length; ++i) {
+      var arg = args[i];
+      if (arg.startsWith("level=")) {
+        try {
+          startLevel = parseInt(arg.substr("level=".length));
+          console.log("Start level set to", startLevel);
+        } catch (ex) {
+          console.log("Could not parse as level= arg", arg, ex);
+        }
+      } else {
+        console.log("Could not understand arg", arg);
+      }
+    }
+  })();
+}
 
 run();
 

@@ -76,6 +76,115 @@ levels.push({
   }
 });
 
+// Level 2: Obstacle course
+levels.push({
+  start: function start(engine) {
+    engine.showText("Often, you will need to avoid obstacles");
+    engine.addEventListener("textShown", function onshown() {
+      engine.removeEventListener("textShown", onshown);
+      window.setTimeout(function () { engine.hideText(); }, 5000);
+    });
+
+    var ball = engine.addBall();
+    ball.x = 0;
+    ball.y = 50;
+    ball.dx = 0;
+    ball.dy = 1;
+
+    var target = engine.addArea();
+    target.x = 0;
+    target.y = 0;
+    target.radiusPixels = 5;
+    target.strokeStyle = "green";
+
+    var superHandleCollision = target.handleCollision;
+    target.handleCollision = function handleCollision(ball) {
+      if (superHandleCollision.call(this, ball)) {
+        console.log("Level is complete");
+        engine.levelComplete(true);
+      }
+    };
+
+    var obstacles = [[0, 25], [0, -25], [25, 0], [-25, 0]];
+    for (var i = 0; i < obstacles.length; ++i) {
+      var obstacle = engine.addArea();
+      var coor = obstacles[i];
+      obstacle.x = coor[0];
+      obstacle.y = coor[1];
+      obstacle.radiusPixels = 5;
+      obstacle.isBouncing = true;
+      obstacle.strokeStyle = "white";
+    }
+
+    engine.run(this);
+  },
+  step: function step(engine) {
+    engine.step();
+  },
+  toString: function toString() {
+    return "Obstacle course";
+  }
+});
+
+// Level 3: Moving obstacles
+levels.push({
+  obstacles: [],
+  start: function start(engine) {
+    engine.showText("They move, too");
+    engine.addEventListener("textShown", function onshown() {
+      engine.removeEventListener("textShown", onshown);
+      window.setTimeout(function () { engine.hideText(); }, 5000);
+    });
+
+    var ball = engine.addBall();
+    ball.x = 0;
+    ball.y = 50;
+    ball.dx = 0;
+    ball.dy = 1;
+
+    var target = engine.addArea();
+    target.x = 0;
+    target.y = 0;
+    target.radiusPixels = 5;
+    target.strokeStyle = "green";
+
+    var superHandleCollision = target.handleCollision;
+    target.handleCollision = function handleCollision(ball) {
+      if (superHandleCollision.call(this, ball)) {
+        console.log("Level is complete");
+        engine.levelComplete(true);
+      }
+    };
+
+    var obstacles = [0, Math.PI/2, Math.PI, 3*Math.PI/2];
+    for (var i = 0; i < obstacles.length; ++i) {
+      var obstacle = engine.addArea();
+      var angle = obstacles[i];
+      obstacle.x = Math.cos(angle) * 25;
+      obstacle.y = Math.sin(angle) * 25;
+      obstacle.radiusPixels = 5;
+      obstacle.isBouncing = true;
+      obstacle.strokeStyle = "white";
+      this.obstacles.push(obstacle);
+    }
+
+    engine.run(this);
+  },
+  step: function step(engine) {
+    var now = Date.now();
+    var previous = engine._previousFrameStamp;
+    for (var i = 0; i < this.obstacles.length; ++i) {
+      var angle = now / 1000 + i * Math.PI / 2;
+      this.obstacles[i].x = Math.cos(angle) * 25;
+      this.obstacles[i].y = Math.sin(angle) * 25;
+    }
+    engine.step();
+  },
+  toString: function toString() {
+    return "Moving obstacles";
+  }
+});
+
 // Ending credits
 levels.push({
   start: function start(engine) {
