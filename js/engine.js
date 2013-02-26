@@ -32,6 +32,7 @@ var Engine = function Engine() {
   this._border = new Border();
   this._step = null;
   this._complete = false;
+  this._health = 100;
 };
 
 Engine.prototype = {
@@ -41,7 +42,7 @@ Engine.prototype = {
    * @param {boolean} victory If true, the player won, otherwise, the player lost
    */
   levelComplete: function levelComplete(victory) {
-    console.log("Informing that level is complete");
+    console.log("Informing that level is complete", victory);
     if (this._complete) {
       return;
     }
@@ -89,10 +90,10 @@ Engine.prototype = {
     if (!this._eltText) {
       var eltBackground = document.getElementById("background");
       this._eltText = eltText = document.createElement("div");
+      eltBackground.appendChild(eltText);
     } else {
       eltText = this._eltText;
     }
-    eltBackground.appendChild(eltText);
     eltText.textContent = text;
     eltText.classList.add("mayappear");
     eltText.classList.add("hidden");
@@ -246,9 +247,16 @@ Engine.prototype = {
     for (i = 0; i < this._balls.length; ++i) {
       var collisions = 0;
       ball = this._balls[i];
-      // FIXME: Collision with the pad
       if (this._pad.handleCollision(ball)) collisions++;
-      if (this._border.handleCollision(ball)) collisions++;
+      if (this._border.handleCollision(ball)) {
+        ball.velocity = ball.velocity * 0.9;
+        this._health -= 15;
+        console.log("Health reduced to", this._health, Math.floor(this._health * 255 / 100));
+        this._border.strokeStyle = "rgb(0, 0, " + Math.floor(this._health * 255 / 100) + ")";
+        if (this._health <= 0) {
+          this.levelComplete(false);
+        }
+      }
       for (var j = 0; j < this._areas.length; ++j) {
         var area = this._areas[j];
         if (area.handleCollision(ball)) collisions++;
@@ -324,9 +332,6 @@ Sprite.prototype = {
   },
 
   show: function show(ctx) {
-    if (this.name == "pad") {
-      console.log("Showing pad", this.x, this.y, this.radiusPixels);
-    }
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.radiusPixels, 0, Math.PI * 2);
     if (this.fillStyle) {
@@ -434,23 +439,26 @@ Pad.prototype = {
 var Border = function Border() {
   Sprite.call(this);
   this.radiusPercent = 1;
-  this.strokeStyle = "blue";
+  this.strokeStyle = "rgb(0, 0, 255)";
   this.isBouncing = true;
   this.isAround = true;
 };
 Border.prototype = {
   __proto__: Object.create(Sprite.prototype),
   name: "border",
-};
-if ("vibrate" in window.navigator) {
-  Border.prototype.handleCollision = function handleCollision(ball) {
+  handleCollision: function handleCollision(ball) {
     if (Sprite.prototype.handleCollision.call(this, ball)) {
-      window.navigator.vibrate(50);
+      this.showCollision();
       return true;
     }
     return false;
-  };
-}
+  },
+  showCollision: function showCollision() {
+    if ("vibrate" in window.navigator) {
+      window.navigator.vibrate(100);
+    }
+  }
+};
 
 var eltCanvas = document.getElementById("canvas");
 var canvasContext = eltCanvas.getContext("2d");

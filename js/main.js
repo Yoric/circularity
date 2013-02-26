@@ -18,10 +18,19 @@ var run = function run() {
     var level = levels[i++];
     console.log("Next level is", "" + level);
     var engine = new Circular.Engine();
-    engine.addEventListener("levelComplete", function() {
+    engine.addEventListener("levelComplete", function(event) {
       // FIXME: Zoom in
       img = engine.getImage();
-      loop();
+      if (event.victory) {
+        loop();
+      } else {
+        try {
+          engine.showText("The circularity is too strong, you cannot escape");
+        } catch (ex) {
+          console.error("Error", ex.stack);
+          throw ex;
+        }
+      }
     });
     level.start(engine, img);
     engine.run(level);
