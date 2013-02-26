@@ -248,6 +248,7 @@ Engine.prototype = {
     }
 
     ////// Handle collisions
+    var destructions = false;
     for (i = 0; i < this._balls.length; ++i) {
       ball = this._balls[i];
       // FIXME: Collision with the pad
@@ -256,14 +257,34 @@ Engine.prototype = {
       for (var j = 0; j < this._areas.length; ++j) {
         var area = this._areas[j];
         area.handleCollision(ball);
+        if (area.isDestroyed) {
+          destructions = true;
+        }
       }
       // FIXME: Collision with other balls
     }
+
+    // FIXME: This won't scale if we have too many areas
+    if (destructions) {
+      var newAreas = [];
+      for (j = 0; j < this._areas.length; ++j) {
+        area = this._areas[j];
+        if (!area.isDestroyed) {
+          newAreas.push(area);
+        }
+      }
+      this._areas = newAreas;
+    }
+
 
     ctx.restore();
 
     this._previousFrameStamp = now;
   },
+
+  getImage: function getImage() {
+    return canvasContext.getImageData(0, 0, Config.width, Config.height);
+  }
 };
 
 /**
@@ -286,6 +307,8 @@ var Sprite = function Sprite() {
   this.strokeStyle = null;
   this.isBouncing = false;
   this.isAround = false;
+  this.isDestructible = false;
+  this.isDestroyed = false;
 };
 Sprite.prototype = {
   /**
@@ -336,6 +359,9 @@ Sprite.prototype = {
       bounce = sqBounceDistance >= sqActualDistance;
       axisX = - axisX;
       axisY = - axisY;
+    }
+    if (bounce && this.isDestructible) {
+      this.isDestroyed = true;
     }
 
     if (!bounce) {

@@ -78,7 +78,7 @@ levels.push({
 
 // Level 2: Obstacle course
 levels.push({
-  start: function start(engine) {
+  start: function start(engine, img) {
     engine.showText("Often, you will need to avoid obstacles");
     engine.addEventListener("textShown", function onshown() {
       engine.removeEventListener("textShown", onshown);
@@ -104,6 +104,7 @@ levels.push({
         engine.levelComplete(true);
       }
     };
+
 
     var obstacles = [[0, 25], [0, -25], [25, 0], [-25, 0]];
     for (var i = 0; i < obstacles.length; ++i) {
@@ -146,7 +147,7 @@ levels.push({
     target.x = 0;
     target.y = 0;
     target.radiusPixels = 5;
-    target.strokeStyle = "green";
+    target.fillStyle = "green";
 
     var superHandleCollision = target.handleCollision;
     target.handleCollision = function handleCollision(ball) {
@@ -182,6 +183,82 @@ levels.push({
   },
   toString: function toString() {
     return "Moving obstacles";
+  }
+});
+
+// Level 4: Bricks
+levels.push({
+  start: function start(engine, img) {
+    engine.showText("Clear a path");
+    engine.addEventListener("textShown", function onshown() {
+      engine.removeEventListener("textShown", onshown);
+      window.setTimeout(function () { engine.hideText(); }, 5000);
+    });
+
+    var ball = engine.addBall();
+    ball.x = 0;
+    ball.y = 50;
+    ball.dx = .1;
+    ball.dy = .9;
+
+    var target = engine.addArea();
+    target.x = 0;
+    target.y = 0;
+    target.radiusPixels = 5;
+    target.strokeStyle = "green";
+
+    var superHandleCollision = target.handleCollision;
+    target.handleCollision = function handleCollision(ball) {
+      if (superHandleCollision.call(this, ball)) {
+        console.log("Level is complete");
+        engine.levelComplete(true);
+      }
+    };
+
+    var obstacle;
+    var angle;
+    var i;
+
+    for (i = 0; i < 4; ++i) {
+      obstacle = engine.addArea();
+      angle = Math.PI * i / 2;
+      obstacle.x = Math.cos(angle) * 10;
+      obstacle.y = Math.sin(angle) * 10;
+      obstacle.radiusPixels = 5;
+      obstacle.isBouncing = true;
+      obstacle.strokeStyle = "white";
+      obstacle.isDestructible = true;
+    }
+
+    for (i = 0; i < 8; ++i) {
+      obstacle = engine.addArea();
+      angle = Math.PI * i / 4;
+      obstacle.x = Math.cos(angle) * 25;
+      obstacle.y = Math.sin(angle) * 25;
+      obstacle.radiusPixels = 5;
+      obstacle.isBouncing = true;
+      obstacle.strokeStyle = "white";
+      obstacle.isDestructible = true;
+    }
+
+    for (i = 0; i < 16; ++i) {
+      obstacle = engine.addArea();
+      angle = Math.PI * i / 8;
+      obstacle.x = Math.cos(angle) * 40;
+      obstacle.y = Math.sin(angle) * 40;
+      obstacle.radiusPixels = 5;
+      obstacle.isBouncing = true;
+      obstacle.strokeStyle = "white";
+      obstacle.isDestructible = true;
+    }
+
+    engine.run(this);
+  },
+  step: function step(engine) {
+    engine.step();
+  },
+  toString: function toString() {
+    return "The Wall";
   }
 });
 
