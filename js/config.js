@@ -3,6 +3,8 @@
  */
 (function() {
 
+"use strict";
+
 var console = window.console;
 
 var Config = {
@@ -19,11 +21,10 @@ var Config = {
       Config.width = width;
       Config.height = height;
       Config.diagonal = diagonal;
-      if (listeners) {
-        for (var listener of listeners) {
+      var set = listeners[":screenChanged"];
+      set.forEach(function(listener) {
           listener();
-        }
-      }
+      });
     };
     var adjustSize = function adjustSize() {
       if (adjustSizeInProgress) {
@@ -35,18 +36,34 @@ var Config = {
     window.addEventListener("resize", adjustSize);
   },
   addEventListener: function addEventListener(kind, listener) {
-    listeners.add(listener);
+    var set = listeners[":" + kind];
+    if (set == null) {
+      throw new Error("Event kind " + kind + " does not exist");
+    }
+    if (set.indexOf(listener) == -1) {
+      set.push(listener);
+    }
     listener();
   },
   removeEventListener: function removeEventListener(kind, listener) {
-    listeners.remove(listener);
+    var set = listeners[":" + kind];
+    if (set == null) {
+      throw new Error("Event kind " + kind + " does not exist");
+    }
+    var index = set.indexOf(listener);
+    if (index != -1) {
+      delete set[index];
+    }
   },
   width: 0,
   height: 0,
   diagonal: 0
 };
 
-var listeners = new Set();
+
+var listeners = {
+  ":screenChanged": []
+};
 
 // Export
 if (!("Circular" in window)) {

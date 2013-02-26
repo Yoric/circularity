@@ -16,6 +16,9 @@ body {
 
 .mayappear {
     transition: opacity 3s;
+    -webkit-transition: opacity 3s;
+    -moz-transition: opacity 3s;
+    -ie-transition: opacity 3s;
 }
 .hidden {
     opacity: 0;

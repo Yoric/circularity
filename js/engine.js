@@ -41,6 +41,7 @@ Engine.prototype = {
    * @param {boolean} victory If true, the player won, otherwise, the player lost
    */
   levelComplete: function levelComplete(victory) {
+    console.log("Informing that level is complete");
     if (this._complete) {
       return;
     }
@@ -52,6 +53,7 @@ Engine.prototype = {
 
   // Handling events
   _fireEvent: function _fireEvent(key, event) {
+    console.log("Informing observers of event", key);
     var set = this._listeners[key];
     if (!set) {
       console.error("Event key", key, "does not exist");
@@ -98,9 +100,11 @@ Engine.prototype = {
       eltText.classList.remove("hidden");
       eltText.classList.add("shown");
       eltText.addEventListener("transitionend", onshown);
+      eltText.addEventListener("webkitTransitionEnd", onshown);
     });
     var onshown = function onshown() {
       eltText.removeEventListener("transitionend", onshown);
+      eltText.removeEventListener("webkitTransitionEnd", onshown);
       self._fireEvent(":textShown", null);
     };
   },
@@ -112,10 +116,13 @@ Engine.prototype = {
     var self = this;
     eltText.classList.remove("shown");
     eltText.classList.add("hidden");
-    eltText.addEventListener("transitionend", function onhidden(e) {
+    var onhidden = function onhidden() {
       eltText.removeEventListener("transitionend", onhidden);
+      eltText.removeEventListener("webkitTransitionEnd", onhidden);
       self._fireEvent(":textHidden", null);
-    });
+    };
+    eltText.addEventListener("transitionend", onhidden);
+    eltText.addEventListener("webkitTransitionEnd", onhidden);
   },
 
   // Sprites
@@ -144,7 +151,7 @@ Engine.prototype = {
     };
     var config = function config() {
       if (self._complete) {
-        Config.removeEventListener("configChanged", config);
+        Config.removeEventListener("screenChanged", config);
         return;
       }
       console.log("Updating radius of just about everything");
@@ -158,7 +165,7 @@ Engine.prototype = {
       });
       self._border.updateRadius(radius);
     };
-    Config.addEventListener("configChanged", config);
+    Config.addEventListener("screenChanged", config);
     this._previousFrameStamp = Date.now();
     requestAnimationFrame(this._step);
   },
