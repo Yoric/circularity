@@ -234,6 +234,51 @@ levels.push({
   }
 });
 
+levels.push({
+  start: function start(engine) {
+    engine.showText("United, they stand.");
+    engine.addEventListener("textShown", function onshown() {
+      engine.removeEventListener("textShown", onshown);
+      window.setTimeout(function () { engine.hideText(); }, 5000);
+    });
+
+    var ball = engine.addBall();
+    ball.x = 0;
+    ball.y = 50;
+    ball.dx = .1;
+    ball.dy = .9;
+
+    var target = addTarget(engine);
+
+    var obstacle;
+    var angle;
+    var i, j;
+    var index = 0;
+    var obstacles = [[4, 10], [8, 25], [16, 40]];
+    for (i = 0; i < obstacles.length; ++i) {
+      var bound = obstacles[i][0];
+      var radius = obstacles[i][1];
+      for (j = 0; j < bound; ++j) {
+        angle = ( Math.PI * 2 * j ) / bound;
+        var x = Math.cos(angle) * radius;
+        var y = Math.sin(angle) * radius;
+        if (i > 0 && index++%4 == 0) {
+          obstacle = addObstacle(engine, x, y);
+        } else {
+          obstacle = addDestructible(engine, x, y);
+        }
+      }
+    }
+    engine.run(this);
+  },
+  step: function step(engine) {
+    engine.step();
+  },
+  toString: function toString() {
+    return "United, they stand";
+  }
+});
+
 // Ending credits
 levels.push({
   start: function start(engine) {
