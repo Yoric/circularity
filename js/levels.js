@@ -54,9 +54,8 @@ levels.push({
     var target = engine.addArea();
     target.x = 0;
     target.y = 0;
-    target.radiusPixels = 5;
-    target.fillStyle = "green";
-    target.strokeColor = "green";
+    target.radiusPixels = 10;
+    target.strokeStyle = "green";
 
     var superHandleCollision = target.handleCollision;
     target.handleCollision = function handleCollision(ball) {
@@ -94,7 +93,7 @@ levels.push({
     var target = engine.addArea();
     target.x = 0;
     target.y = 0;
-    target.radiusPixels = 5;
+    target.radiusPixels = 10;
     target.strokeStyle = "green";
 
     var superHandleCollision = target.handleCollision;
@@ -146,8 +145,8 @@ levels.push({
     var target = engine.addArea();
     target.x = 0;
     target.y = 0;
-    target.radiusPixels = 5;
-    target.fillStyle = "green";
+    target.radiusPixels = 10;
+    target.strokeStyle = "green";
 
     var superHandleCollision = target.handleCollision;
     target.handleCollision = function handleCollision(ball) {
@@ -204,7 +203,7 @@ levels.push({
     var target = engine.addArea();
     target.x = 0;
     target.y = 0;
-    target.radiusPixels = 5;
+    target.radiusPixels = 10;
     target.strokeStyle = "green";
 
     var superHandleCollision = target.handleCollision;

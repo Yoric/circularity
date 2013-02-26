@@ -201,7 +201,6 @@ Engine.prototype = {
 
     ////// Handle movements
 
-    // FIXME: Minimize pad movements
     if (pad.destRad - pad.posRad < pad.posRad - pad.destRad) {
       pad.posRad = Math.min(pad.destRad, pad.posRad + 0.02 * delta);
     } else {
@@ -419,7 +418,7 @@ var Pad = function Pad() {
   Sprite.call(this);
   this.posRad = Math.PI / 2;// Position in radians
   this.destRad = Math.PI / 2; // Destination in radians
-  this.radiusPixels = 10;
+  this.radiusPixels = 20;
   this.isBouncing = true;
 };
 Pad.prototype = {
@@ -436,8 +435,17 @@ var Border = function Border() {
 };
 Border.prototype = {
   __proto__: Object.create(Sprite.prototype),
-  name: "border"
+  name: "border",
 };
+if ("vibrate" in window.navigator) {
+  Border.prototype.handleCollision = function handleCollision(ball) {
+    if (Sprite.prototype.handleCollision.call(this, ball)) {
+      window.navigator.vibrate(50);
+      return true;
+    }
+    return false;
+  };
+}
 
 var eltCanvas = document.getElementById("canvas");
 var canvasContext = eltCanvas.getContext("2d");
