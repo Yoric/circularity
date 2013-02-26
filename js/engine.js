@@ -250,9 +250,10 @@ Engine.prototype = {
       if (this._pad.handleCollision(ball)) collisions++;
       if (this._border.handleCollision(ball)) {
         ball.velocity = ball.velocity * 0.9;
-        this._health -= 15;
+        this._health -= 10;
         console.log("Health reduced to", this._health, Math.floor(this._health * 255 / 100));
         this._border.strokeStyle = "rgb(0, 0, " + Math.floor(this._health * 255 / 100) + ")";
+        this._border.lineWidth = Math.ceil(this._health / 10);
         if (this._health <= 0) {
           this.levelComplete(false);
         }
@@ -313,6 +314,7 @@ var Sprite = function Sprite() {
 
   this.fillStyle = null;
   this.strokeStyle = null;
+  this.lineWidth = null;
   this.isBouncing = false;
   this.isAround = false;
   this.isDestructible = false;
@@ -334,6 +336,9 @@ Sprite.prototype = {
   show: function show(ctx) {
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.radiusPixels, 0, Math.PI * 2);
+    if (this.lineWidth) {
+      ctx.lineWidth = this.lineWidth;
+    }
     if (this.fillStyle) {
       ctx.fillStyle = this.fillStyle;
       ctx.fill();
@@ -442,6 +447,7 @@ var Border = function Border() {
   this.strokeStyle = "rgb(0, 0, 255)";
   this.isBouncing = true;
   this.isAround = true;
+  this.lineWidth = 10;
 };
 Border.prototype = {
   __proto__: Object.create(Sprite.prototype),
