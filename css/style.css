@@ -6,8 +6,9 @@ body {
 }
 #background {
     color: white;
+    text-shadow: 1px 1px darkgray;
     text-align: center;
-    font-family: "fantasy";
+    font-family: sans-serif;
     font-weight: bold;
     top: 50%;
     z-index: 1;
