@@ -216,11 +216,8 @@ levels.push({
 // Level 4: Bricks
 levels.push({
   start: function start(engine, img) {
-    engine.showText("Suddenly, there was no path. We had to clear one.");
-    engine.addEventListener("textShown", function onshown() {
-      engine.removeEventListener("textShown", onshown);
-      window.setTimeout(function () { engine.hideText(); }, 5000);
-    });
+    showText(engine,
+      ["Ahead of us, there was no path. Was the Particle strong enough to clear one?", 5000]);
 
     var ball = engine.addBall();
     ball.x = 0;
@@ -313,11 +310,8 @@ levels.push({
 levels.push({
   obstacles: null,
   start: function start(engine) {
-    engine.showText("As we progressed, we encountered cores of increasing complexity.");
-    engine.addEventListener("textShown", function onshown() {
-      engine.removeEventListener("textShown", onshown);
-      window.setTimeout(function () { engine.hideText(); }, 5000);
-    });
+    showText(engine,
+      ["The core, moving again, as if defending itself.", 5000]);
 
     var ball = engine.addBall();
     ball.x = 0;
