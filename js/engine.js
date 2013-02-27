@@ -283,9 +283,11 @@ Engine.prototype = {
       } else {
         var div = (Input.mouseY - midY) / (Input.mouseX - midX);
         if (Input.mouseX >= midX) {
-          pad.destRad = Math.atan(div);
+          pad.destRad = 2 * Math.PI + Math.atan(div);
+          console.log("destRad1", pad.destRad);
         } else {
           pad.destRad = Math.PI + Math.atan(div);
+          console.log("destRad2", pad.destRad);
         }
       }
       Input.changed = false;
@@ -293,7 +295,7 @@ Engine.prototype = {
 
     ////// Handle movements
 
-    if (pad.destRad - pad.posRad < pad.posRad - pad.destRad) {
+    if (pad.destRad - pad.posRad > pad.posRad - pad.destRad) {
       pad.posRad = Math.min(pad.destRad, pad.posRad + 0.01 * delta);
     } else {
       pad.posRad = Math.max(pad.destRad, pad.posRad - 0.01 * delta);
@@ -612,5 +614,5 @@ var Statistics = window.Circular.Statistics;
 // Exports
 
 Circular.Engine = Engine;
-
+  Circular.Input = Input;
 })();
