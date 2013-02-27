@@ -17,7 +17,7 @@ if (!("classList" in (window.HTMLElement || window.Element).prototype)) {
   var ClassList = function ClassList(element) {
     this._element = element;
     this._classes = element.className.split(" ");
-  }
+  };
   ClassList.prototype = {
     add: function add(className) {
       if (this._classes.indexOf(className) == -1) {
