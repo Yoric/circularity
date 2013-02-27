@@ -11,6 +11,43 @@ var requestAnimationFrame =
   window.setTimeout(f, 17);
 };
 
+// Internet Explorer does not define |classList|
+
+if (!("classList" in (window.HTMLElement || window.Element).prototype)) {
+  var ClassList = function ClassList(element) {
+    this._element = element;
+    this._classes = element.className.split(" ");
+  }
+  ClassList.prototype = {
+    add: function add(className) {
+      if (this._classes.indexOf(className) == -1) {
+        this._classes.push(className);
+        this._element.className = this._classes.join(" ");
+      }
+    },
+    remove: function remove(className) {
+      var index = this._classes.indexOf(className);
+      if (index != -1) {
+        delete this._classes[index];
+        this._element.className = this._classes.join(" ");
+      }
+    }
+  };
+
+  Object.defineProperty(
+    (window.HTMLElement || window.Element).prototype,
+    "classList",
+    {
+      get: function() {
+        return new ClassList(this);
+      },
+      enumerable: true,
+      configurable: true
+    }
+  );
+};
+
+
 // Utility function
 var square = function square(x) {
   return x * x;
@@ -116,6 +153,7 @@ Engine.prototype = {
       eltText = this._eltText;
     }
     eltText.textContent = text;
+    console.log("eltText", eltText);
     eltText.classList.add("mayappear");
     eltText.classList.add("hidden");
     window.setTimeout(function() {
