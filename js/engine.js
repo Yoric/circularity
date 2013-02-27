@@ -6,7 +6,10 @@ var requestAnimationFrame =
    window.requestAnimationFrame
 || window.mozRequestAnimationFrame
 || window.webkitRequestAnimationFrame
-|| window.ieRequestAnimationFrame;
+|| window.ieRequestAnimationFrame
+|| function fallbackRequestAnimationFrame(f) {
+  window.setTimeout(f, 17);
+};
 
 // Utility function
 var square = function square(x) {
@@ -27,15 +30,33 @@ var Engine = function Engine() {
   // The balls
   this._balls = [];
   this._areas = [];
-  this._previousFrameStamp = null;
   this._pad = new Pad();
   this._border = new Border();
   this._step = null;
   this._complete = false;
   this._health = 100;
+
+  this._latestFrameStamp = null;
+  this._latestStartStamp = null;
+  this._now = null;
+  this._timeAccumulated = 0;
 };
 
 Engine.prototype = {
+  /**
+   * The time elapsed since the call to |run|.
+   * (time spent on pause does not count)
+   */
+  get timeSinceStart() {
+    return this._timeAccumulated + this._now - this._latestStartStamp;
+  },
+  /**
+   * The time elapsed since the last frame
+   * (time spent on pause does not count)
+   */
+  get delta() {
+    return this._now - this._latestFrameStamp;
+  },
   /**
    * Call this to notify that the level is complete
    *
@@ -141,23 +162,30 @@ Engine.prototype = {
     return area;
   },
 
+  _handlePause: function _handlePause() {
+    this._timeAccumulated = this.timeSinceStart;
+    var self = this;
+    console.log("Paused", new Error().stack);
+    var onunpause = function onunpause(event) {
+      console.log("Unpaused");
+      window.removeEventListener("click", onunpause);
+      Input.paused = false;
+      window.setTimeout(function() {
+         self._latestStartStamp = self._latestFrameStamp = Date.now();
+          console.log("requestAnimationFrame", 3);
+          requestAnimationFrame(self._step);
+        }, 100);
+    };
+    window.addEventListener("click", onunpause);
+  },
+
   // Running the game (should be called by the level)
   run: function run(level) {
     var self = this;
+    self._latestStartStamp = Date.now();
     this._step = function() {
       if (Input.paused) {
-        console.log("Paused", new Error().stack);
-        var onunpause = function onunpause(event) {
-          console.log("Unpaused");
-          window.removeEventListener("click", onunpause);
-          Input.paused = false;
-          window.setTimeout(function() {
-            self._previousFrameStamp = Date.now();
-            console.log("requestAnimationFrame", 3);
-            requestAnimationFrame(self._step);
-          }, 100);
-        };
-        window.addEventListener("click", onunpause);
+        self._handlePause();
         return;
       }
 
@@ -183,37 +211,26 @@ Engine.prototype = {
       self._border.updateRadius(radius);
     };
     Config.addEventListener("screenChanged", config);
-    this._previousFrameStamp = Date.now();
+    this._latestFrameStamp = Date.now();
     console.log("requestAnimationFrame", 2);
     requestAnimationFrame(this._step);
   },
 
   // One step of the game (should be called by the level)
   step: function() {
-      if (Input.paused) {
-        console.log("Paused", new Error().stack);
-        var onunpause = function onunpause(event) {
-          console.log("Unpaused");
-          window.removeEventListener("click", onunpause);
-          Input.paused = false;
-          window.setTimeout(function() {
-            self._previousFrameStamp = Date.now();
-            console.log("requestAnimationFrame", 3);
-            requestAnimationFrame(self._step);
-          }, 100);
-        };
-        window.addEventListener("click", onunpause);
-        return;
-      }
+    if (Input.paused) {
+      self._handlePause();
+      return;
+    }
 
 
-    var now = Date.now();
+    var now = this._now = Date.now();
 
     var midX = Config.width / 2;
     var midY = Config.height / 2;
     var radius = Math.min(Config.width, Config.height) / 2;
 
-    var delta = now - this._previousFrameStamp;
+    var delta = this.delta;
 
     var pad = this._pad;
 
@@ -329,7 +346,7 @@ Engine.prototype = {
 
     ctx.restore();
 
-    this._previousFrameStamp = now;
+    this._latestFrameStamp = now;
   },
 
   getImage: function getImage() {

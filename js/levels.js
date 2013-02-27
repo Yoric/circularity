@@ -50,18 +50,56 @@ var addDestructible = function addDestructible(engine, x, y) {
   return obstacle;
 };
 
-// Starting credits
-levels.push({
-  start: function start(engine) {
-    var eltText = engine.showText("The Circularity had pulled us in. We had to find a way out.");
+var showText = function showText(engine, messages, cb) {
+  if (!Array.isArray(messages)) {
+    messages = [messages];
+  }
+  var i = 0;
+  var loop = function loop() {
+    if (i >= messages.length) {
+      if (cb) {
+        cb();
+      }
+      return;
+    }
+
+    var message = messages[i++];
+    var text;
+    var duration;
+    if (typeof message == "string") {
+      text = message;
+      duration = null;
+    } else {
+      text = message[0];
+      duration = message[1];
+    }
+    engine.showText(text);
     engine.addEventListener("textShown", function onshown() {
       engine.removeEventListener("textShown", onshown);
       engine.addEventListener("textHidden", function onhidden() {
         engine.removeEventListener("textHidden", onhidden);
-        engine.levelComplete(true);
+        loop();
       });
-      engine.hideText();
+      if (duration) {
+        window.setTimeout(function () { engine.hideText(); }, duration);
+      } else {
+        engine.hideText();
+      }
     });
+  };
+  loop();
+};
+
+// Starting credits
+levels.push({
+  start: function start(engine) {
+    showText(engine,
+      ["The pull was strong. The Circularity had taken us.",
+       "This is the story of our escape."],
+       function() {
+         engine.levelComplete(true);
+       }
+      );
   },
   step: function step(engine) {
     // Nothing to do
@@ -75,11 +113,8 @@ levels.push({
 
 levels.push({
   start: function start(engine) {
-    engine.showText("To aid us in our escape, we only had the Particle. We had to bounce it to the center.");
-    engine.addEventListener("textShown", function onshown() {
-      engine.removeEventListener("textShown", onshown);
-      window.setTimeout(function () { engine.hideText(); }, 5000);
-    });
+    showText(engine,
+             ["To aid us in our escape, we only had the Particle. We had to bounce it to the center.", 5000]);
 
     var ball = engine.addBall();
     ball.x = 0;
@@ -101,11 +136,8 @@ levels.push({
 // Level 2: Obstacle course
 levels.push({
   start: function start(engine, img) {
-    engine.showText("There were obstacles. We had to bounce the Particle past them.");
-    engine.addEventListener("textShown", function onshown() {
-      engine.removeEventListener("textShown", onshown);
-      window.setTimeout(function () { engine.hideText(); }, 5000);
-    });
+    showText(engine,
+      ["There were obstacles. Fortunately, the Particle was agile enough to bounce past them.", 5000]);
 
     var ball = engine.addBall();
     ball.x = 0;
@@ -168,10 +200,9 @@ levels.push({
     engine.run(this);
   },
   step: function step(engine) {
-    var now = Date.now();
-    var previous = engine._previousFrameStamp;
+    var elapsed = engine.timeSinceStart;
     for (var i = 0; i < this.obstacles.length; ++i) {
-      var angle = now / 1000 + i * Math.PI / 2;
+      var angle = elapsed / 1000 + i * Math.PI / 2;
       this.obstacles[i].x = Math.cos(angle) * 25;
       this.obstacles[i].y = Math.sin(angle) * 25;
     }
@@ -279,10 +310,77 @@ levels.push({
   }
 });
 
+levels.push({
+  obstacles: null,
+  start: function start(engine) {
+    engine.showText("As we progressed, we encountered cores of increasing complexity.");
+    engine.addEventListener("textShown", function onshown() {
+      engine.removeEventListener("textShown", onshown);
+      window.setTimeout(function () { engine.hideText(); }, 5000);
+    });
+
+    var ball = engine.addBall();
+    ball.x = 0;
+    ball.y = 50;
+    ball.dx = .1;
+    ball.dy = .9;
+
+    var target = addTarget(engine);
+
+    var obstacle;
+    var angle;
+    var i, j;
+    var index = 0;
+    var init = [[4, 10], [8, 25], [16, 40]];
+    var obstacles = [];
+    for (i = 0; i < init.length; ++i) {
+      var bound = init[i][0];
+      var radius = init[i][1];
+      for (j = 0; j < bound; ++j) {
+        angle = ( Math.PI * 2 * j ) / bound;
+        var x = Math.cos(angle) * radius;
+        var y = Math.sin(angle) * radius;
+        if (i > 0 && index++%4 == 0) {
+          obstacle = addObstacle(engine, x, y);
+        } else {
+          obstacle = addDestructible(engine, x, y);
+        }
+        obstacle.initialAngle = angle;
+        obstacle.radius = radius;
+        obstacle.rank = i;
+        obstacles.push(obstacle);
+      }
+    }
+    this.obstacles = obstacles;
+    engine.run(this);
+  },
+  step: function step(engine) {
+    var elapsed = engine.timeSinceStart;
+    for (var i = 0; i < this.obstacles.length; ++i) {
+      var deltaAngle = elapsed / 1000;
+      var obstacle = this.obstacles[i];
+      var initialAngle = obstacle.initialAngle;
+      var radius = obstacle.radius;
+      var angle;
+      if (obstacle.rank % 2 == 0) {
+        angle = initialAngle + deltaAngle;
+      } else {
+        angle = initialAngle - deltaAngle;
+      }
+      obstacle.x = Math.cos(angle) * radius;
+      obstacle.y = Math.sin(angle) * radius;
+    }
+    engine.step();
+  },
+  toString: function toString() {
+    return "United, they move";
+  }
+});
+
 // Ending credits
 levels.push({
   start: function start(engine) {
-    engine.showText("We had escaped the circularity, for a time.");
+    engine.showText("We had escaped the circularity. For a time.");
   },
   step: function step(engine) {
     // Do NOT call engine.step()
