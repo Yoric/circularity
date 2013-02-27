@@ -53,6 +53,9 @@ var square = function square(x) {
   return x * x;
 };
 
+var HALFPI = Math.PI / 2;
+var TWOPI = Math.PI * 2;
+
 /**
  * @constructor
  */
@@ -276,14 +279,14 @@ Engine.prototype = {
     if (Input.changed) {
       if (Input.mouseX == midX) {
         if (Input.mouseY >= midY) {
-          pad.destRad = Math.PI / 2;
+          pad.destRad = HALFPI;
         } else {
-          pad.destRad = - Math.PI / 2;
+          pad.destRad = - HALFPI;
         }
       } else {
         var div = (Input.mouseY - midY) / (Input.mouseX - midX);
         if (Input.mouseX >= midX) {
-          pad.destRad = 2 * Math.PI + Math.atan(div);
+          pad.destRad = Math.atan(div);
           console.log("destRad1", pad.destRad);
         } else {
           pad.destRad = Math.PI + Math.atan(div);
@@ -295,11 +298,37 @@ Engine.prototype = {
 
     ////// Handle movements
 
-    if (pad.destRad - pad.posRad > pad.posRad - pad.destRad) {
-      pad.posRad = Math.min(pad.destRad, pad.posRad + 0.01 * delta);
-    } else {
-      pad.posRad = Math.max(pad.destRad, pad.posRad - 0.01 * delta);
+    /*
+    console.log("Pad",
+                "pos",  pad.posRad, 0 <= pad.posRad && pad.posRad <= TWOPI,
+                "dest", pad.destRad, 0 <= pad.destRad && pad.destRad <= TWOPI);
+*/
+    if (pad.posRad != pad.destRad) {
+      // Number of radians required to go from posRad to destRad by increasing posRad
+      var deltaIncrease;
+      // Number of radians required to go from posRad to destRad by decreasing posRad
+      var deltaDecrease;
+      if (pad.posRad < pad.destRad) {
+        deltaIncrease = Math.min(pad.destRad - pad.posRad, pad.posRad + TWOPI - pad.destRad);
+        deltaDecrease = Math.max(pad.posRad - pad.destRad, pad.destRad + TWOPI - pad.posRad);
+        console.log("delta", "case 1", pad.posRad, pad.destRad, pad.destRad - pad.posRad, pad.posRad + TWOPI - pad.destRad, deltaIncrease, deltaDecrease);
+      } else {
+        deltaIncrease = Math.min(pad.posRad - pad.destRad, pad.destRad + TWOPI - pad.posRad);
+        deltaDecrease = Math.max(pad.destRad - pad.posRad, pad.posRad + TWOPI - pad.destRad);
+        console.log("delta", "case 2", pad.posRad, pad.destRad, - pad.destRad + pad.posRad, - pad.posRad + TWOPI + pad.destRad, deltaIncrease, deltaDecrease);
+      }
+      if (deltaIncrease < deltaDecrease) {
+        // Increase
+        console.log("Increase", pad.destRad,  pad.posRad + 0.005 * delta);
+        pad.posRad = Math.min(pad.destRad, pad.posRad + 0.005 * delta);
+      } else {
+        // Decrease
+        console.log("Decrease");
+        pad.posRad = Math.max(pad.destRad, pad.posRad - 0.005 * delta);
+      }
+//      throw new Error();
     }
+
     pad.x = radius * Math.cos(this._pad.posRad);
     pad.y = radius * Math.sin(this._pad.posRad);
 
@@ -436,7 +465,7 @@ Sprite.prototype = {
    */
   show: function show(ctx) {
     ctx.beginPath();
-    ctx.arc(this.x, this.y, this.radiusPixels, 0, Math.PI * 2);
+    ctx.arc(this.x, this.y, this.radiusPixels, 0, TWOPI);
     if (this.lineWidth) {
       ctx.lineWidth = this.lineWidth;
     }
@@ -531,8 +560,8 @@ Ball.prototype = {
 
 var Pad = function Pad() {
   Sprite.call(this);
-  this.posRad = Math.PI / 2;// Position in radians
-  this.destRad = Math.PI / 2; // Destination in radians
+  this.posRad = HALFPI;// Position in radians
+  this.destRad = HALFPI; // Destination in radians
   this.radiusPixels = 20;
   this.isBouncing = true;
   this.fillStyle = "white";
