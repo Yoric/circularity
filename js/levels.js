@@ -53,7 +53,7 @@ var addDestructible = function addDestructible(engine, x, y) {
 // Starting credits
 levels.push({
   start: function start(engine) {
-    var eltText = engine.showText("The circularity has pulled you in. Escape.");
+    var eltText = engine.showText("The Circularity had pulled us in. We had to find a way out.");
     engine.addEventListener("textShown", function onshown() {
       engine.removeEventListener("textShown", onshown);
       engine.addEventListener("textHidden", function onhidden() {
@@ -75,7 +75,7 @@ levels.push({
 
 levels.push({
   start: function start(engine) {
-    engine.showText("To escape this circle, bounce the particle towards the center.");
+    engine.showText("To aid us in our escape, we only had the Particle. We had to bounce it to the center.");
     engine.addEventListener("textShown", function onshown() {
       engine.removeEventListener("textShown", onshown);
       window.setTimeout(function () { engine.hideText(); }, 5000);
@@ -101,7 +101,7 @@ levels.push({
 // Level 2: Obstacle course
 levels.push({
   start: function start(engine, img) {
-    engine.showText("Obstacles block your escape. Find your way around them.");
+    engine.showText("There were obstacles. We had to bounce the Particle past them.");
     engine.addEventListener("textShown", function onshown() {
       engine.removeEventListener("textShown", onshown);
       window.setTimeout(function () { engine.hideText(); }, 5000);
@@ -135,7 +135,7 @@ levels.push({
 levels.push({
   obstacles: [],
   start: function start(engine) {
-    engine.showText("Some of these particles move.");
+    engine.showText("The particles moved, as if defending the core.");
     engine.addEventListener("textShown", function onshown() {
       engine.removeEventListener("textShown", onshown);
       window.setTimeout(function () { engine.hideText(); }, 5000);
@@ -185,7 +185,7 @@ levels.push({
 // Level 4: Bricks
 levels.push({
   start: function start(engine, img) {
-    engine.showText("There is no path. Maybe you can clear one.");
+    engine.showText("Suddenly, there was no path. We had to clear one.");
     engine.addEventListener("textShown", function onshown() {
       engine.removeEventListener("textShown", onshown);
       window.setTimeout(function () { engine.hideText(); }, 5000);
@@ -236,7 +236,7 @@ levels.push({
 
 levels.push({
   start: function start(engine) {
-    engine.showText("United, they stand.");
+    engine.showText("As we progressed, we encountered cores of increasing complexity.");
     engine.addEventListener("textShown", function onshown() {
       engine.removeEventListener("textShown", onshown);
       window.setTimeout(function () { engine.hideText(); }, 5000);
@@ -282,7 +282,7 @@ levels.push({
 // Ending credits
 levels.push({
   start: function start(engine) {
-    engine.showText("Congratulations. You have escaped the circularity");
+    engine.showText("We had escaped the circularity, for a time.");
   },
   step: function step(engine) {
     // Do NOT call engine.step()

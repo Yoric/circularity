@@ -24,12 +24,7 @@ var run = function run() {
       if (event.victory) {
         loop();
       } else {
-        try {
-          engine.showText("The pull of the circularity is too strong. There is no escape.");
-        } catch (ex) {
-          console.error("Error", ex.stack);
-          throw ex;
-        }
+        engine.showText("We went too deep and the pull of the Circularity was too strong. There was no escape.");
       }
     });
     level.start(engine, img);
