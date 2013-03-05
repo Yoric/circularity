@@ -64,7 +64,8 @@ var Engine = function Engine() {
   this._listeners = {
     ":levelComplete": [],
     ":textShown": [],
-    ":textHidden": []
+    ":textHidden": [],
+    ":resized": []
   };
 
   // The balls
@@ -287,16 +288,16 @@ Engine.prototype = {
         var div = (Input.mouseY - midY) / (Input.mouseX - midX);
         if (Input.mouseX >= midX) {
           pad.destRad = Math.atan(div);
-          console.log("destRad1", pad.destRad);
+//          console.log("destRad1", pad.destRad);
         } else {
           pad.destRad = Math.PI + Math.atan(div);
-          console.log("destRad2", pad.destRad);
+//          console.log("destRad2", pad.destRad);
         }
         if (pad.destRad < 0) {
-          console.log("destRad", "Renormalizing +2pi");
+//          console.log("destRad", "Renormalizing +2pi");
           pad.destRad += TWOPI;
         } else if (pad.destRad >= TWOPI) {
-          console.log("destRad", "Renormalizing -2pi");
+//          console.log("destRad", "Renormalizing -2pi");
           pad.destRad -= TWOPI;
         }
       }
@@ -489,6 +490,7 @@ Sprite.prototype = {
       return;
     }
     this.radiusPixels = Math.floor(globalRadius * this.radiusPercent);
+    console.log("Radius", this.radiusPixels);
   },
 
   /**

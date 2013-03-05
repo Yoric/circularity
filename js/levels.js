@@ -16,7 +16,7 @@ var addTarget = function addTarget(engine) {
   var target = engine.addArea();
   target.x = 0;
   target.y = 0;
-  target.radiusPixels = 10;
+  target.radiusPixels = 5;
   target.strokeStyle = "green";
 
   var superHandleCollision = target.handleCollision;
@@ -340,7 +340,7 @@ levels.push({
           obstacle = addDestructible(engine, x, y);
         }
         obstacle.initialAngle = angle;
-        obstacle.radius = radius;
+        obstacle.radiusPos = radius;
         obstacle.rank = i;
         obstacles.push(obstacle);
       }
@@ -354,7 +354,7 @@ levels.push({
       var deltaAngle = elapsed / 1000;
       var obstacle = this.obstacles[i];
       var initialAngle = obstacle.initialAngle;
-      var radius = obstacle.radius;
+      var radius = obstacle.radiusPos;
       var angle;
       if (obstacle.rank % 2 == 0) {
         angle = initialAngle + deltaAngle;
