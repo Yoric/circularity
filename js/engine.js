@@ -644,8 +644,8 @@ var onmousemove = function onmousemove(event) {
   Input.changed = true;
 };
 
-eltCanvas.addEventListener("click", onmousemove);
-document.getElementById("background").addEventListener("click", onmousemove);
+eltCanvas.addEventListener("mousemove", onmousemove);
+document.getElementById("background").addEventListener("mousemove", onmousemove);
 
 var onblur = function onblur(event) {
   console.log("blur");
