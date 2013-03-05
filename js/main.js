@@ -22,6 +22,9 @@ var run = function run() {
       // FIXME: Zoom in
       img = engine.getImage();
       if (event.victory) {
+        if ("nextLevel" in event) {
+          i = event.nextLevel;
+        }
         loop();
       } else {
         engine.showText("We went too deep and the pull of the Circularity was too strong. There was no escape.");

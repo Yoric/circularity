@@ -103,14 +103,18 @@ Engine.prototype = {
    *
    * @param {boolean} victory If true, the player won, otherwise, the player lost
    */
-  levelComplete: function levelComplete(victory) {
+  levelComplete: function levelComplete(victory, nextLevel) {
     console.log("Informing that level is complete", victory);
     if (this._complete) {
       return;
     }
     this._step = function() { }; // Level is complete, nothing left to do
     this._complete = true;
-    this._fireEvent(":levelComplete", {kind: "levelComplete", victory: victory});
+    var event = {kind: "levelComplete", victory: victory};
+    if (nextLevel) {
+      event.nextLevel = nextLevel;
+    }
+    this._fireEvent(":levelComplete", event);
   },
 
 
@@ -648,6 +652,7 @@ var onmousemove = function onmousemove(event) {
 
 eltCanvas.addEventListener("mousemove", onmousemove);
 document.getElementById("background").addEventListener("mousemove", onmousemove);
+document.getElementById("menu").addEventListener("mousemove", onmousemove);
 
 var onblur = function onblur(event) {
   console.log("blur");

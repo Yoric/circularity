@@ -106,6 +106,55 @@ levels.push({
   },
   toString: function toString() {
     return "Starting credits";
+  },
+  unlocked: true
+});
+
+
+// Menu
+levels.push({
+  start: function start(engine) {
+    var menu = document.getElementById("menu");
+    var gotoLevel = function gotoLevel(i) {
+      return function() {
+        console.log("Moving to level", i);
+        menu.classList.remove("shown");
+        menu.classList.add("hidden");
+        menu.addEventListener("transitionend", function() {
+          menu.innerHTML = "";
+        });
+        return engine.levelComplete(true, i);
+      };
+    };
+    menu.innerHTML = "";
+    menu.classList.remove("hidden");
+    menu.classList.add("shown");
+    var list = document.createElement("ul");
+    var number = 0;
+    var li;
+    for (var i = 2; i < levels.length; ++i) {
+      var level = levels[i];
+      if (!level.unlocked) {
+        continue;
+      }
+      ++number;
+      li = document.createElement("li");
+      li.textContent = level.toString();
+      li.classList.add("unlocked");
+      list.appendChild(li);
+      li.addEventListener("click", gotoLevel(i));
+    }
+    if (number == 1) {
+      gotoLevel(2)();
+      return;
+    }
+    li = document.createElement("li");
+    li.textContent = "(continue)";
+    li.classList.add("locked");
+    list.appendChild(li);
+    menu.appendChild(list);
+  },
+  step: function() {
   }
 });
 
@@ -129,8 +178,9 @@ levels.push({
     engine.step();
   },
   toString: function toString() {
-    return "Tutorial";
-  }
+    return "It begins";
+  },
+  unlocked: true
 });
 
 // Level 2: Obstacle course
