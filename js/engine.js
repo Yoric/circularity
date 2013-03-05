@@ -292,41 +292,72 @@ Engine.prototype = {
           pad.destRad = Math.PI + Math.atan(div);
           console.log("destRad2", pad.destRad);
         }
+        if (pad.destRad < 0) {
+          console.log("destRad", "Renormalizing +2pi");
+          pad.destRad += TWOPI;
+        } else if (pad.destRad >= TWOPI) {
+          console.log("destRad", "Renormalizing -2pi");
+          pad.destRad -= TWOPI;
+        }
       }
       Input.changed = false;
     }
 
     ////// Handle movements
 
-    /*
-    console.log("Pad",
-                "pos",  pad.posRad, 0 <= pad.posRad && pad.posRad <= TWOPI,
-                "dest", pad.destRad, 0 <= pad.destRad && pad.destRad <= TWOPI);
-*/
-    if (pad.posRad != pad.destRad) {
-      // Number of radians required to go from posRad to destRad by increasing posRad
-      var deltaIncrease;
-      // Number of radians required to go from posRad to destRad by decreasing posRad
-      var deltaDecrease;
-      if (pad.posRad < pad.destRad) {
-        deltaIncrease = Math.min(pad.destRad - pad.posRad, pad.posRad + TWOPI - pad.destRad);
-        deltaDecrease = Math.max(pad.posRad - pad.destRad, pad.destRad + TWOPI - pad.posRad);
-        console.log("delta", "case 1", pad.posRad, pad.destRad, pad.destRad - pad.posRad, pad.posRad + TWOPI - pad.destRad, deltaIncrease, deltaDecrease);
+    var radDiff = pad.destRad - pad.posRad;
+    if (radDiff != 0) {
+      // We have to either do one of the following.
+      // 1. increase posRad until it reaches destRad
+      // 2. increase posRad until it reaches destRad + 2 * PI
+      // 3. decrease posRad until it reaches destRad
+      // 4. decrease posRad until it reaches destRad - 2 * PI
+      // We need to find which one is the shortest
+
+      var destRad2;
+      var destRadFinal;
+      var shouldIncrease;
+//      console.log("Determining pad movement", pad.posRad, pad.destRad);
+      if (radDiff > 0) {
+        destRad2 = pad.destRad - TWOPI;
+        // We are either in case 1. or in case 4.
+//        console.log("We are either in case 1. or in case 4.", radDiff, pad.posRad - destRad2);
+        if (radDiff < pad.posRad - destRad2) {
+//          console.log("Case 1. increase posRad until it reaches destRad");
+          shouldIncrease = true;
+          destRadFinal = pad.destRad;
+        } else {
+//          console.log("Case 4. decrease posRad until it reaches destRad - 2pi", pad.posRad, destRad2);
+          shouldIncrease = false;
+          destRadFinal = destRad2;
+        }
       } else {
-        deltaIncrease = Math.min(pad.posRad - pad.destRad, pad.destRad + TWOPI - pad.posRad);
-        deltaDecrease = Math.max(pad.destRad - pad.posRad, pad.posRad + TWOPI - pad.destRad);
-        console.log("delta", "case 2", pad.posRad, pad.destRad, - pad.destRad + pad.posRad, - pad.posRad + TWOPI + pad.destRad, deltaIncrease, deltaDecrease);
+        // We are either in case 2. or in case 3.
+        destRad2 = pad.destRad + TWOPI;
+//        console.log("We are either in case 2. or in case 3.", -radDiff, destRad2 - pad.posRad);
+        if (-radDiff < destRad2 - pad.posRad) {
+//          console.log("Case 3. decrease posRad until it reaches destRad");
+          shouldIncrease = false;
+          destRadFinal = pad.destRad;
+        } else {
+//          console.log("Case 2. increase posRad until it reaches destRad + 2pi", pad.posRad, destRad2);
+          shouldIncrease = true;
+          destRadFinal = destRad2;
+        }
       }
-      if (deltaIncrease < deltaDecrease) {
-        // Increase
-        console.log("Increase", pad.destRad,  pad.posRad + 0.005 * delta);
-        pad.posRad = Math.min(pad.destRad, pad.posRad + 0.005 * delta);
+      if (shouldIncrease) {
+//        console.log("Increasing", destRadFinal, pad.posRad + 0.005 * delta);
+        pad.posRad = Math.min(destRadFinal, pad.posRad + 0.005 * delta);
+        if (pad.posRad >= TWOPI) {
+          pad.posRad -= TWOPI;
+        }
       } else {
-        // Decrease
-        console.log("Decrease");
-        pad.posRad = Math.max(pad.destRad, pad.posRad - 0.005 * delta);
+//        console.log("Decreasing", destRadFinal, pad.posRad - 0.005 * delta);
+        pad.posRad = Math.max(destRadFinal, pad.posRad - 0.005 * delta);
+        if (pad.posRad < 0) {
+          pad.posRad += TWOPI;
+        }
       }
-//      throw new Error();
     }
 
     pad.x = radius * Math.cos(this._pad.posRad);
@@ -613,8 +644,8 @@ var onmousemove = function onmousemove(event) {
   Input.changed = true;
 };
 
-eltCanvas.addEventListener("mousemove", onmousemove);
-document.getElementById("background").addEventListener("mousemove", onmousemove);
+eltCanvas.addEventListener("click", onmousemove);
+document.getElementById("background").addEventListener("click", onmousemove);
 
 var onblur = function onblur(event) {
   console.log("blur");
