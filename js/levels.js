@@ -50,52 +50,12 @@ var addDestructible = function addDestructible(engine, x, y) {
   return obstacle;
 };
 
-var showText = function showText(engine, messages, cb) {
-  if (!Array.isArray(messages)) {
-    messages = [messages];
-  }
-  var i = 0;
-  var loop = function loop() {
-    if (i >= messages.length) {
-      if (cb) {
-        cb();
-      }
-      return;
-    }
-
-    var message = messages[i++];
-    var text;
-    var duration;
-    if (typeof message == "string") {
-      text = message;
-      duration = null;
-    } else {
-      text = message[0];
-      duration = message[1];
-    }
-    engine.showText(text);
-    engine.addEventListener("textShown", function onshown() {
-      engine.removeEventListener("textShown", onshown);
-      engine.addEventListener("textHidden", function onhidden() {
-        engine.removeEventListener("textHidden", onhidden);
-        loop();
-      });
-      if (duration) {
-        window.setTimeout(function () { engine.hideText(); }, duration);
-      } else {
-        engine.hideText();
-      }
-    });
-  };
-  loop();
-};
-
 // Starting credits
 levels.push({
   start: function start(engine) {
-    showText(engine,
+    engine.showText(
       ["The pull was strong. The Circularity had taken us.",
-       "This is the story of our escape."],
+       "We had to escape."],
        function() {
          engine.levelComplete(true);
        }
@@ -141,8 +101,16 @@ levels.push({
       li = document.createElement("li");
       li.textContent = level.toString();
       li.classList.add("unlocked");
-      list.appendChild(li);
+      li.classList.add("hidden");
+      li.classList.add("mayappear");
       li.addEventListener("click", gotoLevel(i));
+      list.appendChild(li);
+      window.setTimeout((function(li) {
+        return function() {
+          li.classList.add("shown");
+          li.classList.remove("hidden");
+        };
+      })(li), i * 100);
     }
     if (number == 1) {
       gotoLevel(2)();
@@ -151,6 +119,14 @@ levels.push({
     li = document.createElement("li");
     li.textContent = "(continue)";
     li.classList.add("locked");
+    li.classList.add("hidden");
+    li.classList.add("mayappear");
+    window.setTimeout((function(li) {
+      return function() {
+        li.classList.add("shown");
+        li.classList.remove("hidden");
+      };
+    })(li), i * 100);
     list.appendChild(li);
     menu.appendChild(list);
   },
@@ -162,8 +138,8 @@ levels.push({
 
 levels.push({
   start: function start(engine) {
-    showText(engine,
-             ["To aid us in our escape, we only had the Particle. We had to bounce it to the center.", 5000]);
+    engine.showText(
+      [["To aid us in our escape, we only had the Particle. We had to bounce it to the center.", 5000]]);
 
     var ball = engine.addBall();
     ball.x = 0;
@@ -186,8 +162,8 @@ levels.push({
 // Level 2: Obstacle course
 levels.push({
   start: function start(engine, img) {
-    showText(engine,
-      ["There were obstacles. Fortunately, the Particle was agile enough to bounce past them.", 5000]);
+    engine.showText(
+      [["There were obstacles. Fortunately, the Particle was agile enough to bounce past them.", 5000]]);
 
     var ball = engine.addBall();
     ball.x = 0;
@@ -266,8 +242,8 @@ levels.push({
 // Level 4: Bricks
 levels.push({
   start: function start(engine, img) {
-    showText(engine,
-      ["Ahead of us, there was no path. Was the Particle strong enough to clear one?", 5000]);
+    engine.showText(
+      [["Ahead of us, there was no path. Was the Particle strong enough to clear one?", 5000]]);
 
     var ball = engine.addBall();
     ball.x = 0;
@@ -360,8 +336,8 @@ levels.push({
 levels.push({
   obstacles: null,
   start: function start(engine) {
-    showText(engine,
-      ["The core, moving again, as if defending itself.", 5000]);
+    engine.showText(
+      [["The core, moving again, as if defending itself.", 5000]]);
 
     var ball = engine.addBall();
     ball.x = 0;

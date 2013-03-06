@@ -150,7 +150,12 @@ Engine.prototype = {
   },
 
   // Displaying text
-  showText: function showText(text) {
+  showText: function showText(texts, cb) {
+    if (!Array.isArray(texts)) {
+      texts = [ "" + texts ];
+    }
+
+    // Initialize DOM if necessary
     var eltText;
     var self = this;
     if (!this._eltText) {
@@ -160,23 +165,52 @@ Engine.prototype = {
     } else {
       eltText = this._eltText;
     }
-    eltText.textContent = text;
-    console.log("eltText", eltText);
-    eltText.classList.add("mayappear");
-    eltText.classList.add("hidden");
-    window.setTimeout(function() {
-      eltText.classList.remove("hidden");
-      eltText.classList.add("shown");
-      eltText.addEventListener("transitionend", onshown);
-      eltText.addEventListener("webkitTransitionEnd", onshown);
-    });
-    var onshown = function onshown() {
-      eltText.removeEventListener("transitionend", onshown);
-      eltText.removeEventListener("webkitTransitionEnd", onshown);
-      self._fireEvent(":textShown", null);
+
+    // Show text
+    var i = 0;
+    var loop = function loop() {
+      if (i >= texts.length) {
+        if (cb) {
+          cb();
+        }
+        return;
+      }
+
+      var message = texts[i++];
+      var text;
+      var duration;
+      if (typeof message == "string") {
+        text = message;
+        duration = null;
+      } else {
+        text = message[0];
+        duration = message[1];
+      }
+      eltText.classList.add("mayappear");
+      eltText.classList.add("hidden");
+      console.log("Preparing to display", text, JSON.stringify(eltText.classList));
+      eltText.textContent = text;
+      window.setTimeout(function() {
+        eltText.classList.remove("hidden");
+        eltText.classList.add("shown");
+        eltText.addEventListener("transitionend", onshown);
+        eltText.addEventListener("webkitTransitionEnd", onshown);
+        console.log("Showing progressively", text, JSON.stringify(eltText.classList));
+      });
+      var onshown = function onshown() {
+        eltText.removeEventListener("transitionend", onshown);
+        eltText.removeEventListener("webkitTransitionEnd", onshown);
+        self._fireEvent(":textShown", null);
+        if (duration) {
+          window.setTimeout(function () { self.hideText(loop); }, duration);
+        } else {
+          self.hideText(loop);
+        }
+      };
     };
+    loop();
   },
-  hideText: function hideText() {
+  hideText: function hideText(cb) {
     var eltText = this._eltText;
     if (!eltText) {
       return;
@@ -188,6 +222,9 @@ Engine.prototype = {
       eltText.removeEventListener("transitionend", onhidden);
       eltText.removeEventListener("webkitTransitionEnd", onhidden);
       self._fireEvent(":textHidden", null);
+      if (cb) {
+        cb();
+      }
     };
     eltText.addEventListener("transitionend", onhidden);
     eltText.addEventListener("webkitTransitionEnd", onhidden);
@@ -650,12 +687,18 @@ var onmousemove = function onmousemove(event) {
   Input.changed = true;
 };
 
-eltCanvas.addEventListener("mousemove", onmousemove);
-document.getElementById("background").addEventListener("mousemove", onmousemove);
-document.getElementById("menu").addEventListener("mousemove", onmousemove);
+var inputElements = [
+  eltCanvas,
+  document.getElementById("background"),
+  document.getElementById("menu")
+];
+
+for (var element of inputElements) {
+  element.addEventListener("mousemove", onmousemove);
+  element.addEventListener("click", onclick);
+}
 
 var onblur = function onblur(event) {
-  console.log("blur");
   Input.paused = true;
   event.stopPropagation();
 };
