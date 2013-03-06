@@ -43,10 +43,6 @@ body {
     font-weight: bold;
 }
 
-#menu li.unlocked {
-    list-style-type: disc;
-}
-
-#menu li.locked {
-    list-style-type: circle;
+#menu li {
+    list-style-type: none;
 }
