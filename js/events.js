@@ -1,6 +1,9 @@
+/**
+ * A minimal library for handling custom event listeners
+ */
 (function events() {
 
-console.log("Initializing events");
+"use strict";
 
 var Emitter = function Emitter(kinds) {
   this._listeners = {};

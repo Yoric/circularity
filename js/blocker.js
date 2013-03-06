@@ -1,3 +1,6 @@
+/**
+ * A minimal library for waiting until a number of conditions are fulfilled
+ */
 (function blocker() {
 
 "use strict";

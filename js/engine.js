@@ -1,3 +1,6 @@
+/**
+ * The game engine
+ */
 (function() {
 
 "use strict";
