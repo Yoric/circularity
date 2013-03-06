@@ -2,6 +2,14 @@
 
 "use strict";
 
+// Configure
+var Circular;
+if ("Circular" in window) {
+  Circular = window.Circular;
+} else {
+  Circular = window.Circular = {};
+}
+
 var requestAnimationFrame =
    window.requestAnimationFrame
 || window.mozRequestAnimationFrame
@@ -60,13 +68,7 @@ var TWOPI = Math.PI * 2;
  * @constructor
  */
 var Engine = function Engine() {
-  // A map from the various kinds of events to their observers
-  this._listeners = {
-    ":levelComplete": [],
-    ":textShown": [],
-    ":textHidden": [],
-    ":resized": []
-  };
+  Circular.Emitter.call(this, ["levelComplete", "textShown", "textHidden", "resized"]);
 
   // The balls
   this._balls = [];
@@ -84,6 +86,8 @@ var Engine = function Engine() {
 };
 
 Engine.prototype = {
+  __proto__: Object.create(Circular.Emitter.prototype),
+
   /**
    * The time elapsed since the call to |run|.
    * (time spent on pause does not count)
@@ -114,39 +118,7 @@ Engine.prototype = {
     if (nextLevel) {
       event.nextLevel = nextLevel;
     }
-    this._fireEvent(":levelComplete", event);
-  },
-
-
-  // Handling events
-  _fireEvent: function _fireEvent(key, event) {
-    console.log("Informing observers of event", key);
-    var set = this._listeners[key];
-    if (!set) {
-      console.error("Event key", key, "does not exist");
-    }
-    set.forEach(function(listener) {
-      listener(event);
-    });
-  },
-  addEventListener: function addEventListener(kind, listener) {
-    var set = this._listeners[":" + kind];
-    if (set == null) {
-      throw new Error("Event kind " + kind + " does not exist");
-    }
-    if (set.indexOf(listener) == -1) {
-      set.push(listener);
-    }
-  },
-  removeEventListener: function removeEventListener(kind, listener) {
-    var set = this._listeners[":" + kind];
-    if (set == null) {
-      throw new Error("Event kind " + kind + " does not exist");
-    }
-    var index = set.indexOf(listener);
-    if (index != -1) {
-      delete set[index];
-    }
+    this.fireEvent("levelComplete", event);
   },
 
   // Displaying text
@@ -166,10 +138,27 @@ Engine.prototype = {
       eltText = this._eltText;
     }
 
+    var aborting = false;
+    var abort = function abort() {
+      console.log("Aborting");
+      aborting = true;
+      eltText.innerHTML = "";
+      removeEventListener("click", abort);
+      if (cb) {
+        cb();
+      }
+    };
+    addEventListener("click", abort);
+
     // Show text
     var i = 0;
     var loop = function loop() {
+      if (aborting) {
+        return;
+      }
       if (i >= texts.length) {
+        console.log("Done showing text");
+        removeEventListener("click", abort);
         if (cb) {
           cb();
         }
@@ -200,7 +189,7 @@ Engine.prototype = {
       var onshown = function onshown() {
         eltText.removeEventListener("transitionend", onshown);
         eltText.removeEventListener("webkitTransitionEnd", onshown);
-        self._fireEvent(":textShown", null);
+        self.fireEvent("textShown", null);
         if (duration) {
           window.setTimeout(function () { self.hideText(loop); }, duration);
         } else {
@@ -221,7 +210,7 @@ Engine.prototype = {
     var onhidden = function onhidden() {
       eltText.removeEventListener("transitionend", onhidden);
       eltText.removeEventListener("webkitTransitionEnd", onhidden);
-      self._fireEvent(":textHidden", null);
+      self.fireEvent("textHidden", null);
       if (cb) {
         cb();
       }
@@ -693,10 +682,19 @@ var inputElements = [
   document.getElementById("menu")
 ];
 
-for (var element of inputElements) {
-  element.addEventListener("mousemove", onmousemove);
-  element.addEventListener("click", onclick);
-}
+function addEventListener(kind, listener) {
+  for (var element of inputElements) {
+    element.addEventListener(kind, listener);
+  }
+};
+
+function removeEventListener(kind, listener) {
+  for (var element of inputElements) {
+    element.removeEventListener(kind, listener);
+  }
+};
+
+addEventListener("mousemove", onmousemove);
 
 var onblur = function onblur(event) {
   Input.paused = true;
@@ -707,22 +705,14 @@ window.addEventListener("blur", onblur);
 document.addEventListener("blur", onblur);
 eltCanvas.addEventListener("blur", onblur);
 
-// Configure
-var Circular;
-if ("Circular" in window) {
-  Circular = window.Circular;
-} else {
-  Circular = window.Circular = {};
-}
 
 
 var Config = window.Circular.Config;
-Config.init(eltCanvas);
 
 var Statistics = window.Circular.Statistics;
 
 // Exports
 
 Circular.Engine = Engine;
-  Circular.Input = Input;
+Circular.Input = Input;
 })();

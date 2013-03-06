@@ -5,70 +5,64 @@
 
 "use strict";
 
+// Configure
+var Circular;
+if ("Circular" in window) {
+  Circular = window.Circular;
+} else {
+  Circular = window.Circular = {};
+}
+
+
 var console = window.console;
 
-var Config = {
-  init: function(eltCanvas) {
-    var adjustSizeInProgress = null;
-    var adjustSizeHelper = function adjustSizeHelper() {
-      var backgroundRect = eltCanvas.getBoundingClientRect();
-      var width = Math.round(backgroundRect.width);
-      var height = Math.round(backgroundRect.height);
-      var diagonal =  Math.sqrt(width * width, height * height);
-      eltCanvas.setAttribute("width", width);
-      eltCanvas.setAttribute("height", height);
-      adjustSizeInProgress = null;
-      Config.width = width;
-      Config.height = height;
-      Config.diagonal = diagonal;
-      var set = listeners[":screenChanged"];
-      set.forEach(function(listener) {
-          listener();
-      });
-    };
-    var adjustSize = function adjustSize() {
-      if (adjustSizeInProgress) {
-        return;
-      }
-      adjustSizeInProgress = window.setTimeout(adjustSizeHelper, 70);
-    };
-    adjustSizeHelper();
-    window.addEventListener("resize", adjustSize);
-  },
+console.log("Initializing config");
+
+var Config = function Config() {
+  Circular.Emitter.call(this, ["screenChanged"]);
+  this.width = 0;
+  this.height = 0;
+  this.diagonal = 0;
+};
+
+Config.prototype = {
+  __proto__: Object.create(Circular.Emitter.prototype),
   addEventListener: function addEventListener(kind, listener) {
-    var set = listeners[":" + kind];
-    if (set == null) {
-      throw new Error("Event kind " + kind + " does not exist");
+    if (!this._initialized) {
+      var adjustSizeInProgress = null;
+      var adjustSizeHelper = (function adjustSizeHelper() {
+        var eltCanvas = document.getElementById("canvas");
+        var backgroundRect = eltCanvas.getBoundingClientRect();
+        var width = Math.round(backgroundRect.width);
+        var height = Math.round(backgroundRect.height);
+        var diagonal =  Math.sqrt(width * width, height * height);
+        eltCanvas.setAttribute("width", width);
+        eltCanvas.setAttribute("height", height);
+        adjustSizeInProgress = null;
+        this.width = width;
+        this.height = height;
+        this.diagonal = diagonal;
+        this.fireEvent("screenChanged", "init");
+      }).bind(this);
+      var adjustSize = function adjustSize() {
+        if (adjustSizeInProgress) {
+          return;
+        }
+        adjustSizeInProgress = window.setTimeout(adjustSizeHelper, 70);
+      };
+      adjustSizeHelper();
+      window.addEventListener("resize", adjustSize);
+      this._initialized = true;
     }
-    if (set.indexOf(listener) == -1) {
-      set.push(listener);
+    Config.prototype.__proto__.addEventListener.call(this, kind, listener);
+    if (kind == "screenChanged") {
+      listener("init");
     }
-    listener();
   },
-  removeEventListener: function removeEventListener(kind, listener) {
-    var set = listeners[":" + kind];
-    if (set == null) {
-      throw new Error("Event kind " + kind + " does not exist");
-    }
-    var index = set.indexOf(listener);
-    if (index != -1) {
-      delete set[index];
-    }
-  },
-  width: 0,
-  height: 0,
-  diagonal: 0
 };
 
 
-var listeners = {
-  ":screenChanged": []
-};
+Circular.Config = new Config();
 
-// Export
-if (!("Circular" in window)) {
-  window.Circular = {};
-}
-window.Circular.Config = Config;
-
+console.log("Initializing config", "done");
 })();

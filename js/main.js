@@ -6,6 +6,8 @@ var Circular = window.Circular;
 
 var levels = Circular.levels;
 
+var db;
+
 var credits = function credits(cb) {
   var engine = new Circular.Engine();
   engine.showText(
@@ -99,8 +101,12 @@ var loop = function loop() {
 
 var run = function run() {
   // Starting credits
-  credits(menu);
-//  window.setTimeout(loop, 0);
+  console.log("Running, with nextLevel", nextLevel);
+  if (nextLevel < 0) {
+    credits(menu);
+  } else {
+    window.setTimeout(loop, 0);
+  }
 };
 
 // Debugging code

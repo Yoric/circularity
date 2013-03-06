@@ -1,0 +1,42 @@
+(function blocker() {
+
+"use strict";
+
+// Configure
+var Circular;
+if ("Circular" in window) {
+  Circular = window.Circular;
+} else {
+  Circular = window.Circular = {};
+}
+
+var Blocker = function Blocker() {
+  Circular.Emitter.call(this, "ready");
+  this._blocks = Object.create();
+  this._size = 0;
+};
+Blocker.prototype = {
+  __proto__: Object.create(Circular.Emitter.prototype),
+  add: function add(blocker) {
+    var key = ":" + blocker;
+    if (key in this._blockers) {
+      throw new Error("Blocker " + blocker + " already present");
+    }
+    this._blockers[key] = true;
+    --this._size;
+  },
+  remove: function remove(blocker) {
+    var key = ":" + blocker;
+    if (!(key in this._blockers)) {
+      throw new Error("Blocker " + blocker + " not present");
+    }
+    delete this._blockers[key];
+    if (--this._size == 0) {
+      this.fireEvent("ready");
+    }
+  }
+};
+
+Circular.Blocker = Blocker;
+
+})();
