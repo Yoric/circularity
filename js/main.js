@@ -6,34 +6,101 @@ var Circular = window.Circular;
 
 var levels = Circular.levels;
 
-var startLevel = 0;
+var credits = function credits(cb) {
+  var engine = new Circular.Engine();
+  engine.showText(
+    ["The pull was strong. The Circularity had taken us.",
+     "We had to escape."], cb);
+};
+
+var menu = function menu() {
+  var eltMenu = document.getElementById("menu");
+  var gotoLevel = function gotoLevel(i) {
+    return function() {
+      console.log("Moving to level", i);
+      eltMenu.classList.remove("shown");
+      eltMenu.classList.add("hidden");
+      eltMenu.addEventListener("transitionend", function() {
+        eltMenu.innerHTML = "";
+      });
+      nextLevel = i;
+      loop();
+    };
+  };
+
+  eltMenu.innerHTML = "";
+  eltMenu.classList.remove("hidden");
+  eltMenu.classList.add("shown");
+  var list = document.createElement("ul");
+  var number = 0;
+  var li;
+  for (var i = 0; i < levels.length; ++i) {
+    var level = levels[i];
+    if (!level.unlocked) {
+      continue;
+    }
+    ++number;
+    li = document.createElement("li");
+    li.textContent = level.toString();
+    li.classList.add("unlocked");
+    li.classList.add("hidden");
+    li.classList.add("mayappear");
+    li.addEventListener("click", gotoLevel(i));
+    list.appendChild(li);
+    window.setTimeout((function(li) {
+      return function() {
+        li.classList.add("shown");
+        li.classList.remove("hidden");
+      };
+    })(li), i * 100);
+  }
+//  if (number == 1) {
+//    gotoLevel(0)();
+//    return;
+//  }
+  li = document.createElement("li");
+  li.addEventListener("click", gotoLevel(0));
+  li.textContent = "(continue)";
+  li.classList.add("locked");
+  li.classList.add("hidden");
+  li.classList.add("mayappear");
+  window.setTimeout((function(li) {
+    return function() {
+      li.classList.add("shown");
+      li.classList.remove("hidden");
+    };
+  })(li), i * 100);
+  list.appendChild(li);
+  eltMenu.appendChild(list);
+};
+
+var nextLevel = -1;
+var eltBackground = document.getElementById("background");
+var loop = function loop() {
+  console.log("Loop", "level", nextLevel, "from", levels.length, new Error().stack);
+  eltBackground.innerHTML = "";
+  var level = levels[nextLevel];
+  var engine = new Circular.Engine();
+  engine.addEventListener("levelComplete", function(event) {
+    if (event.victory) {
+      if ("nextLevel" in event) {
+        nextLevel = event.nextLevel;
+      } else {
+        ++nextLevel;
+      }
+      loop();
+    } else {
+      engine.showText("We went too deep and the pull of the Circularity was too strong. There was no escape.");
+    }
+  });
+  level.start(engine);
+  engine.run(level);
+};
 
 var run = function run() {
-  var eltBackground = document.getElementById("background");
-  var i = startLevel;
-  var img = null;
-  var loop = function loop() {
-    console.log("Loop", "level", i, "from", levels.length, new Error().stack);
-    eltBackground.innerHTML = "";
-    var level = levels[i++];
-    console.log("Next level is", "" + level);
-    var engine = new Circular.Engine();
-    engine.addEventListener("levelComplete", function(event) {
-      // FIXME: Zoom in
-      img = engine.getImage();
-      if (event.victory) {
-        if ("nextLevel" in event) {
-          i = event.nextLevel;
-        }
-        loop();
-      } else {
-        engine.showText("We went too deep and the pull of the Circularity was too strong. There was no escape.");
-      }
-    });
-    level.start(engine, img);
-    engine.run(level);
-  };
-  window.setTimeout(loop, 0);
+  // Starting credits
+  credits(menu);
+//  window.setTimeout(loop, 0);
 };
 
 // Debugging code
@@ -45,8 +112,8 @@ if (window.location.search.length > 1) {
       var arg = args[i];
       if (arg.startsWith("level=")) {
         try {
-          startLevel = parseInt(arg.substr("level=".length));
-          console.log("Start level set to", startLevel);
+          nextLevel = parseInt(arg.substr("level=".length));
+          console.log("Start level set to", nextLevel);
         } catch (ex) {
           console.log("Could not parse as level= arg", arg, ex);
         }
