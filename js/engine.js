@@ -616,7 +616,7 @@ var Ball = function Ball() {
   this.dx = 0;
   this.dy = 1;
   this.velocity = 0.1;
-  this.radiusPixels = 5;
+  this.radiusPercent = .03;
   this.fillStyle = "white";
 };
 Ball.prototype = {
