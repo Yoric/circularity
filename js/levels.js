@@ -17,6 +17,7 @@ var addTarget = function addTarget(engine) {
   target.x = 0;
   target.y = 0;
   target.radiusPercent = .03;
+  target.minPixelRadius = 5;
   target.strokeStyle = "green";
 
   var superHandleCollision = target.handleCollision;
