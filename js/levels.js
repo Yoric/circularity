@@ -33,7 +33,8 @@ var addObstacle = function addObstacle(engine, x, y) {
   var obstacle = engine.addArea();
   obstacle.x = x;
   obstacle.y = y;
-  obstacle.radiusPixels = .02;
+  obstacle.radiusPercent = .02;
+  obstacle.minPixelRadius = 2;
   obstacle.isBouncing = true;
   obstacle.fillStyle = "white";
   return obstacle;
@@ -44,6 +45,7 @@ var addDestructible = function addDestructible(engine, x, y) {
   obstacle.x = x;
   obstacle.y = y;
   obstacle.radiusPixels = .02;
+  obstacle.minPixelRadius = 2;
   obstacle.isBouncing = true;
   obstacle.strokeStyle = "white";
   obstacle.isDestructible = true;

@@ -503,6 +503,7 @@ var Sprite = function Sprite() {
    */
   this.radiusPixels = 0;
   this.radiusPercent = null;
+  this.minPixelRadius = 1;
 
   this.fillStyle = null;
   this.strokeStyle = null;
@@ -520,9 +521,10 @@ Sprite.prototype = {
   updateRadius: function updateRadius(globalRadius) {
     console.log("Updating radius of", "" + this, globalRadius, this.radiusPercent);
     if (this.radiusPercent == null) {
+      this.radiusPixels = this.minPixelRadius;
       return;
     }
-    this.radiusPixels = Math.floor(globalRadius * this.radiusPercent);
+    this.radiusPixels = Math.max(this.minPixelRadius, Math.floor(globalRadius * this.radiusPercent));
     console.log("Radius", this.radiusPixels);
   },
 
@@ -617,6 +619,7 @@ var Ball = function Ball() {
   this.dy = 1;
   this.velocity = 0.1;
   this.radiusPercent = .03;
+  this.minPixelRadius = 2;
   this.fillStyle = "white";
 };
 Ball.prototype = {
@@ -628,7 +631,8 @@ var Pad = function Pad() {
   Sprite.call(this);
   this.posRad = HALFPI;// Position in radians
   this.destRad = HALFPI; // Destination in radians
-  this.radiusPixels = 20;
+  this.minPixelRadius = 20;
+  this.radiusPercent = .07;
   this.isBouncing = true;
   this.fillStyle = "white";
 };
